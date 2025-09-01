@@ -59,6 +59,13 @@ function setup() {
 
   let trackSelect = document.createElement('select');
   trackSelect.id = 'track-select';
+  // WORKAROUND: always add Track 0 option in initial state
+  if (keyframesArray.length === 1) {
+    let opt = document.createElement('option');
+    opt.value = 0;
+    opt.textContent = 'Track 0';
+    trackSelect.appendChild(opt);
+  }
   window.updateTrackSelect = function() {
     const trackSelect = document.getElementById('track-select');
     if (!trackSelect) return;
