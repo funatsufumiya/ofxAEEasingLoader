@@ -16,7 +16,7 @@ void ofApp::draw(){
     float y = ae_easing.get<float>(t);
 
     // NOTE:
-    // - you can also specify property name: `ae_easing.get("prop name", t)`
+    // - you can also specify property name: `ae_easing.get(t, "prop name")`
     // - alternatively, specify property index: `ae_easing.get(t, 0)` ( `.get(t)` is short for `.get(t, 0)` )
 
     ofDrawBitmapString("t: " + ofToString(t, 2), 50, 50);
