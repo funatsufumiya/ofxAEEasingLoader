@@ -184,11 +184,6 @@ protected:
         return cubic_bezier(p0y, p1y, p2y, p3y, t_bez);
     }
 
-    // vector<float> zeros(size_t n){
-    //     std::vector<float> vs(n, 0.0f);
-    //     return vs;
-    // }
-
     vector<float> get_values_at_time(const std::vector<Keyframe>& keys, float t) {
         if (keys.empty()) return {};
         if (t <= keys.front().time) return keys.front().value;
