@@ -17,6 +17,7 @@ void ofApp::draw(){
 
     // NOTE:
     // - you can also specify property name: `ae_easing.get(t, "prop name")`
+    //    - property name also matches match_name.
     // - alternatively, specify property index: `ae_easing.get(t, 0)` ( `.get(t)` is short for `.get(t, 0)` )
 
     ofDrawBitmapString("t: " + ofToString(t, 2), 50, 50);
