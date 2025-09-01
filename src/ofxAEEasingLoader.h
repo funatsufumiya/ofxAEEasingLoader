@@ -231,8 +231,8 @@ protected:
         float p3y = v1;
 
         // The speed in AE is "the amount of change in value per second"
-        float p1y = v0 + (outEase.speed * dt / 3.0) * (outEase.influence / 100.0);
-        float p2y = v1 - (inEase.speed * dt / 3.0) * (inEase.influence / 100.0);
+        float p1y = v0 + outEase.speed * dt * (outEase.influence / 100.0);
+        float p2y = v1 - inEase.speed * dt * (inEase.influence / 100.0);
 
         // Back-calculate the x corresponding to t(0-1) (approximate with Newton's method)
         float x = localT;
