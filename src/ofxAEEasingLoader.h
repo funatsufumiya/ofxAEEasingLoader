@@ -83,13 +83,27 @@ public:
         }
     }
 
+    /// @brief return value of property_name at time t
+    /// @tparam T one of float/ofVec2f/ofVec3f/ofVec4f/vector<float>
+    /// @param property_name 
+    /// @param t time (seconds)
+    /// @return value
     template <typename T>
     T get(std::string property_name, float t);
 
+    /// @brief return value of property_index at time t
+    /// @tparam T one of float/ofVec2f/ofVec3f/ofVec4f/vector<float>
+    /// @param property_name 
+    /// @param t time (seconds)
+    /// @return value
     template <typename T>
     T get(int property_index, float t);
 
     /// @brief alias of get(0, t)
+    /// @tparam T one of float/ofVec2f/ofVec3f/ofVec4f/vector<float>
+    /// @param property_name 
+    /// @param t time (seconds)
+    /// @return value
     template <typename T>
     T get(float t) {
         return get<T>(0, t);
