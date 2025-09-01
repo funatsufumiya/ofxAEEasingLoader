@@ -1,5 +1,50 @@
 #pragma once
 
+#if __cplusplus >= 201703L
+#if __has_include(<optional>)
+
+#define OFXFADE_USE_STD_OPTIONAL
+#include <optional>
+
+#endif // __has_include(<optional>)
+#endif // __cplusplus >= 201703L
+
+namespace ofxaeel {
+
+#ifdef OFXAEEL_USE_STD_OPTIONAL
+    using std::optional;
+
+    static const std::nullopt_t nullopt = std::nullopt;
+#else
+
+    struct nullopt_t {};
+    static const nullopt_t nullopt = nullopt_t();
+
+    template<typename T>
+    class optional {
+    public:
+        optional() : has_value_(false) {}
+        optional(const T& value) : value_(value), has_value_(true) {}
+        optional(nullopt_t) : has_value_(false) {}
+
+        void reset() { has_value_ = false; }
+        void set(const T& value) { value_ = value; has_value_ = true; }
+        bool has_value() const { return has_value_; }
+        T& value() { return value_; }
+        const T& value() const { return value_; }
+        explicit operator bool() const { return has_value_; }
+        T& operator*() { return value_; }
+        const T& operator*() const { return value_; }
+
+    private:
+        T value_;
+        bool has_value_;
+    };
+
+#endif // USE_STD_OPTIONAL
+
+} // namespace ofxaeel
+
 #include "ofMain.h"
 
 class ofxAEEasingLoader {
@@ -23,8 +68,10 @@ public:
     };
 
     struct Track {
-        std::string name;
+        std::string propertyName;
         std::string matchName;
+        std::string parentName;
+        std::string layerName;
         std::vector<Keyframe> keyframes;
     };
 
@@ -48,8 +95,10 @@ public:
             tracks.push_back(Track{});
             auto&& keyframes = tracks[i].keyframes;
 
-            tracks[i].name = d["propertyName"];
+            tracks[i].propertyName = d["propertyName"];
             tracks[i].matchName = d["matchName"];
+            tracks[i].layerName = d.contains("layerName")? d["layerName"]: "";
+            tracks[i].parentName = d.contains("parentName")? d["parentName"]: "";
 
             for (const auto& k : d["keys"]) {
                 Ease outEase{0,0}, inEase{0,0};
@@ -83,30 +132,49 @@ public:
         }
     }
 
+    void dumpTracks(){
+        for(auto&& t: tracks){
+            ofLog() << "------------";
+            ofLog() << "property_name: " << t.propertyName;
+            ofLog() << "layer_name: " << t.layerName;
+            ofLog() << "parent_name: " << t.parentName;
+            ofLog() << "( match_name: " << t.matchName << " )";
+        }
+    }
+
+    /// @brief return property_index
+    /// @param property_name 
+    /// @param layer_name optional
+    /// @param parent_name optional
+    /// @return index of property
+    size_t getPropertyIndex(std::string property_name, ofxaeel::optional<std::string> layer_name = ofxaeel::nullopt, ofxaeel::optional<std::string> parent_name = ofxaeel::nullopt);
+
     /// @brief return value of property_name at time t
     /// @tparam T one of float/ofVec2f/ofVec3f/ofVec4f/vector<float>
-    /// @param property_name 
     /// @param t time (seconds)
+    /// @param property_name 
+    /// @param layer_name optional
+    /// @param parent_name optional
     /// @return value
     template <typename T>
-    T get(std::string property_name, float t);
+    T get(float t, std::string property_name, ofxaeel::optional<std::string> layer_name = ofxaeel::nullopt, ofxaeel::optional<std::string> parent_name = ofxaeel::nullopt);
 
     /// @brief return value of property_index at time t
     /// @tparam T one of float/ofVec2f/ofVec3f/ofVec4f/vector<float>
-    /// @param property_name 
     /// @param t time (seconds)
+    /// @param property_name 
     /// @return value
     template <typename T>
-    T get(int property_index, float t);
+    T get(float t, size_t property_index);
 
-    /// @brief alias of get(0, t)
+    /// @brief alias of get(t, 0)
     /// @tparam T one of float/ofVec2f/ofVec3f/ofVec4f/vector<float>
-    /// @param property_name 
     /// @param t time (seconds)
+    /// @param property_name 
     /// @return value
     template <typename T>
     T get(float t) {
-        return get<T>(0, t);
+        return get<T>(t, 0);
     }
 
     static const std::string easeTypeToString(EaseType ease_type) {
