@@ -45,6 +45,30 @@
         return;
     }
 
+    function findLayerNameForProp(prop, comp) {
+        var layers = comp.layers;
+        for (var i = 1; i <= layers.length; i++) {
+            var layer = layers[i];
+            if (searchPropInTree(layer, prop)) {
+                return layer.name;
+            }
+        }
+        return null;
+    }
+
+    function searchPropInTree(rootProp, targetProp) {
+        if (rootProp === targetProp) return true;
+        if (rootProp.numProperties && rootProp.numProperties > 0) {
+            for (var i = 1; i <= rootProp.numProperties; i++) {
+                if (searchPropInTree(rootProp.property(i), targetProp)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    var comp = app.project.activeItem;
     var result = [];
     for(var i=0; i<sel.length; i++) {
         var prop = sel[i];
@@ -60,19 +84,7 @@
                 interpolationOut: interpolationTypeToString(prop.keyOutInterpolationType(k))
             });
         }
-        // Get parent layer name
-        var layerName = null;
-        try {
-            if (prop.propertyGroup && typeof prop.propertyGroup === 'function') {
-                // propertyGroup(0) returns layer name
-                var layer = prop.propertyGroup(0);
-                if (layer && layer.name) {
-                    layerName = layer.name;
-                }
-            }
-        } catch(e) {
-            layerName = null;
-        }
+        var layerName = findLayerNameForProp(prop, comp);
         result.push({
             propertyName: prop.name,
             layerName: layerName,
