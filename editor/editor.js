@@ -20,6 +20,28 @@ let valueMin = 0, valueMax = 500;
 
 function setup() {
   createValueIndexSelector();
+
+  // metadata input
+  let ui = document.getElementById('ui');
+  let metaDiv = document.createElement('div');
+  metaDiv.id = 'meta-info';
+  metaDiv.style.marginBottom = '8px';
+  if (ui) ui.insertBefore(metaDiv, ui.firstChild);
+  
+  const metaProps = ['propertyName','parentName','layerName','matchName'];
+  metaProps.forEach(prop => {
+    let label = document.createElement('label');
+    label.textContent = prop+': ';
+    label.style.marginRight = '4px';
+    let input = document.createElement('input');
+    input.type = 'text';
+    input.value = '';
+    input.id = 'meta-'+prop;
+    input.style.marginRight = '12px';
+    metaDiv.appendChild(label);
+    metaDiv.appendChild(input);
+  });
+
   let cnv = createCanvas(700, 500);
   cnv.parent('canvas-container');
   // timelineMax input
@@ -456,6 +478,28 @@ function loadJson(event){
   let reader = new FileReader();
   reader.onload = function(e){
     let data = JSON.parse(e.target.result);
+    // Display metadata
+    if(data[0]){
+      let metaDiv = document.getElementById('meta-info');
+      if(metaDiv) {
+        metaDiv.innerHTML = '';
+        // Properties to display
+        const metaProps = ['propertyName','parentName','layerName','matchName'];
+        metaProps.forEach(prop => {
+          let val = data[0][prop] !== undefined ? data[0][prop] : '';
+          let label = document.createElement('label');
+          label.textContent = prop+': ';
+          label.style.marginRight = '4px';
+          let input = document.createElement('input');
+          input.type = 'text';
+          input.value = val;
+          input.id = 'meta-'+prop;
+          input.style.marginRight = '12px';
+          metaDiv.appendChild(label);
+          metaDiv.appendChild(input);
+        });
+      }
+    }
     if(data[0] && data[0].keys){
       keyframes = data[0].keys.map(k=>({
         time: k.time,
@@ -478,8 +522,8 @@ function loadJson(event){
         let scrollSlider = select('#timeline-scroll');
         if(scrollSlider) scrollSlider.elt.max = timelineMax-timelineLen;
       }
-  updateValueIndexSelector();
-  redraw();
+      updateValueIndexSelector();
+      redraw();
     }
   };
   reader.readAsText(file);
