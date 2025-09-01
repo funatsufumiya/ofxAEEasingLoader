@@ -55,7 +55,7 @@ function drawKeyframes() {
     if(x<60||x>width-40) continue;
     fill(i===selected? 'yellow':'cyan');
     stroke(0); ellipse(x, y, 14, 14);
-    // 補間タイプ表示
+    // Show interpolation type
     noStroke(); fill(255,180,0); textSize(10);
     text(k.interpolationOut[0].toUpperCase(), x, y-12);
   }
@@ -139,7 +139,7 @@ function doubleClicked() {
 }
 
 function keyPressed() {
-  // 補間タイプ切替: 1=hold, 2=linear, 3=bezier
+  // 1=hold, 2=linear, 3=bezier
   if(selected>=0){
     let k = keyframes[selected];
     if(key==='a') k.outEase.influence = max(0, k.outEase.influence-5);
