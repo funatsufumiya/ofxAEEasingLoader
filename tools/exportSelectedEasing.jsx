@@ -73,6 +73,7 @@
         }
         result.push({
             propertyName: prop.name,
+            layerName: layerName,
             matchName: prop.matchName,
             keys: keys
         });
