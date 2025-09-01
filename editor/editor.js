@@ -1,5 +1,5 @@
 // Bezier Animation Editor (p5.js)
-// Simple 1-track, only supports Position
+// Simple 1-track, only supports Position (3D)
 // Right-click to add keyframes, drag to move, select to edit ease
 
 let keyframes = [
@@ -11,13 +11,15 @@ let timelineLen = 5; // Display range (seconds)
 let timelineStart = 0; // Scroll position (seconds)
 let timelineMax = 10; // Overall maximum time (seconds)
 let selected = -1;
+let selectedValueIndex = 0; // en: Editing target value component index (default 0: X component)
 let dragging = false;
 let dragOffset = {x:0, y:0};
-let outHandleBackup = null; // {influence, speed} の一時保存
+let outHandleBackup = null; // {influence, speed} temporally backup
 let draggingHandle = null; // 'out' or 'in'
-let valueMin = 100, valueMax = 500;
+let valueMin = 0, valueMax = 500;
 
 function setup() {
+  createValueIndexSelector();
   let cnv = createCanvas(700, 500);
   cnv.parent('canvas-container');
   // timelineMax input
@@ -92,6 +94,39 @@ function setup() {
   noLoop();
 }
 
+function createValueIndexSelector() {
+  // Remove existing selector if any
+  const old = document.getElementById('value-index-selector');
+  if (old) old.remove();
+  // Get the length of the value array
+  let len = 1;
+  if (keyframes.length > 0 && Array.isArray(keyframes[0].value)) {
+    len = keyframes[0].value.length;
+  }
+  // Create selector
+  const sel = document.createElement('select');
+  sel.id = 'value-index-selector';
+  sel.style.margin = '0 8px';
+  for (let i = 0; i < len; ++i) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `Index ${i}`;
+    sel.appendChild(opt);
+  }
+  sel.value = selectedValueIndex;
+  sel.onchange = (e) => {
+    selectedValueIndex = parseInt(e.target.value);
+    redraw();
+  };
+  // Add to the top of the UI
+  const ui = document.getElementById('ui');
+  if (ui) ui.insertBefore(sel, ui.firstChild);
+}
+
+function updateValueIndexSelector() {
+  createValueIndexSelector();
+}
+
 function draw() {
   background(51);
   drawTimeline();
@@ -122,7 +157,7 @@ function drawKeyframes() {
   for(let i=0; i<keyframes.length; i++){
     let k = keyframes[i];
     let x = timeToX(k.time);
-    let y = valueToY(k.value[1]);
+    let y = valueToY(k.value[selectedValueIndex]);
     if(x<60||x>width-40) continue;
     fill(i===selected? 'yellow':'cyan');
     stroke(0); ellipse(x, y, 14, 14);
@@ -139,7 +174,7 @@ function drawHandles() {
   if(selected<0 || selected>=keyframes.length-1) return;
   let k0 = keyframes[selected], k1 = keyframes[selected+1];
   let t0 = k0.time, t1 = k1.time;
-  let v0 = k0.value[1], v1 = k1.value[1];
+  let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
   let dt = t1-t0;
   if(dt<=0) return;
   // Control point calculation
@@ -164,7 +199,7 @@ function drawCurve() {
     let v = getValueAtTime(t);
     let x = timeToX(t);
     if(x<60||x>width-40) continue;
-    vertex(x, valueToY(v[1]));
+    vertex(x, valueToY(v[selectedValueIndex]));
   }
   endShape();
 }
@@ -175,7 +210,7 @@ function mousePressed() {
   if(selected>=0 && selected<keyframes.length-1){
     let k0 = keyframes[selected], k1 = keyframes[selected+1];
     let t0 = k0.time, t1 = k1.time;
-    let v0 = k0.value[1], v1 = k1.value[1];
+    let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
     let dt = t1-t0;
     if(dt>0){
       let p1x = timeToX(t0 + (t1-t0)*k0.outEase.influence/100.0);
@@ -190,9 +225,13 @@ function mousePressed() {
     // Right-click to add
     let t = xToTime(mouseX);
     let v = yToValue(mouseY);
+    // 追加時: 既存keyframeのvalue配列長に合わせる
+    let arrLen = keyframes.length>0 && Array.isArray(keyframes[0].value) ? keyframes[0].value.length : 3;
+    let valArr = new Array(arrLen).fill(0);
+    valArr[selectedValueIndex] = constrain(v,valueMin,valueMax);
     keyframes.push({
       time: constrain(t,0,timelineMax),
-      value: [0, constrain(v,valueMin,valueMax), 0],
+      value: valArr,
       interpolationOut: 'bezier', interpolationIn: 'bezier',
       outEase: {influence:33,speed:0}, inEase:{influence:33,speed:0}
     });
@@ -204,7 +243,7 @@ function mousePressed() {
   for(let i=0; i<keyframes.length; i++){
     let k = keyframes[i];
     let x = timeToX(k.time);
-    let y = valueToY(k.value[1]);
+    let y = valueToY(k.value[selectedValueIndex]);
     if(dist(mouseX, mouseY, x, y)<10){
       selected = i;
       dragging = true;
@@ -222,7 +261,7 @@ function mouseDragged() {
   if(draggingHandle && selected>=0 && selected<keyframes.length-1){
     let k0 = keyframes[selected], k1 = keyframes[selected+1];
     let t0 = k0.time, t1 = k1.time;
-    let v0 = k0.value[1], v1 = k1.value[1];
+    let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
     let dt = t1-t0;
     let px = mouseX-dragOffset.x, py = mouseY-dragOffset.y;
     if(draggingHandle==='out'){
@@ -245,7 +284,7 @@ function mouseDragged() {
     let t = xToTime(mouseX-dragOffset.x);
     let v = yToValue(mouseY-dragOffset.y);
     keyframes[selected].time = constrain(t,0,timelineMax);
-    keyframes[selected].value[1] = constrain(v,valueMin,valueMax);
+    keyframes[selected].value[selectedValueIndex] = constrain(v,valueMin,valueMax);
     keyframes.sort((a,b)=>a.time-b.time);
     selected = keyframes.findIndex(k=>k===keyframes[selected]);
     redraw();
@@ -262,7 +301,7 @@ function doubleClicked() {
   for(let i=0; i<keyframes.length; i++){
     let k = keyframes[i];
     let x = timeToX(k.time);
-    let y = valueToY(k.value[1]);
+  let y = valueToY(k.value[selectedValueIndex]);
     if(dist(mouseX, mouseY, x, y)<10){
       keyframes.splice(i,1);
       selected = -1;
@@ -317,19 +356,25 @@ function getValueAtTime(t){
   let localT = (t-k0.time)/(k1.time-k0.time);
   // HOLD
   if(k0.interpolationOut==='hold'){
-    return [0, k0.value[1], 0];
+    let arr = k0.value.slice();
+    return arr;
   }
   // LINEAR
   if(k0.interpolationOut==='linear' || k1.interpolationIn==='linear'){
-    return [0, lerp(k0.value[1], k1.value[1], localT), 0];
+    let arr = k0.value.slice();
+    arr[selectedValueIndex] = lerp(k0.value[selectedValueIndex], k1.value[selectedValueIndex], localT);
+    return arr;
   }
   // BEZIER
   if(k0.interpolationOut==='bezier' && k1.interpolationIn==='bezier'){
     let t0 = k0.time, t1 = k1.time;
-    let v0 = k0.value[1], v1 = k1.value[1];
+    let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
     let outEase = k0.outEase, inEase = k1.inEase;
     let dt = t1 - t0;
-    if(dt <= 0) return [0, v0, 0];
+    if(dt <= 0) {
+      let arr = k0.value.slice();
+      return arr;
+    }
     // Control point calculation
     let p0x = 0.0, p3x = 1.0;
     let p1x = outEase.influence / 100.0;
@@ -353,10 +398,14 @@ function getValueAtTime(t){
     }
     let t_bez = guess;
     let y = cubicBezier(p0y, p1y, p2y, p3y, t_bez);
-    return [0, y, 0];
+    let arr = k0.value.slice();
+    arr[selectedValueIndex] = y;
+    return arr;
   }
   // fallback: linear
-  return [0, lerp(k0.value[1], k1.value[1], localT), 0];
+  let arr = k0.value.slice();
+  arr[selectedValueIndex] = lerp(k0.value[selectedValueIndex], k1.value[selectedValueIndex], localT);
+  return arr;
 }
 
 function cubicBezier(p0,p1,p2,p3,t){
@@ -429,7 +478,8 @@ function loadJson(event){
         let scrollSlider = select('#timeline-scroll');
         if(scrollSlider) scrollSlider.elt.max = timelineMax-timelineLen;
       }
-      redraw();
+  updateValueIndexSelector();
+  redraw();
     }
   };
   reader.readAsText(file);
