@@ -15,7 +15,7 @@ public:
     };
     struct Keyframe {
         float time;
-        float value;
+        vector<float> value;
         EaseType interpolationOut;
         EaseType interpolationIn;
         Ease outEase;
@@ -61,9 +61,17 @@ public:
                     inEase.influence = k["inEase"][0]["influence"].get<float>();
                     inEase.speed = k["inEase"][0]["speed"].get<float>();
                 }
+
+                vector<float> values;
+                if(k["value"].is_array()){
+                    values = k["value"].get<vector<float>>();
+                }else{
+                    values = {k["value"].get<float>()};
+                }
+
                 keyframes.push_back({
                     k["time"].get<float>(),
-                    k["value"].get<float>(),
+                    values,
                     stringToEaseType(k["interpolationOut"].get<std::string>()),
                     stringToEaseType(k["interpolationIn"].get<std::string>()),
                     outEase,
@@ -75,28 +83,15 @@ public:
         }
     }
 
-    float get(std::string name, float t){
-        auto it = std::find_if(tracks.begin(), tracks.end(), [&name](const Track& t) {
-            return t.name == name;
-        });
+    template <typename T = float>
+    T get(std::string name, float t);
 
-        if (it != tracks.end()) {
-            return get_value_at_time(it->keyframes, t);
-        } else {
-            ofLogError("ofxAEEasingLoader") << "name " << name << " not found";
-            assert(false);
-        }
-    }
-
-    float get(int index, float t){
-        auto&& track = tracks.at(index);
-        return get_value_at_time(track.keyframes, t);
-    }
+    template <typename T = float>
+    T get(int index, float t);
 
     /// @brief alias of get(0, t)
-    float get(float t){
-        return get(0, t);
-    }
+    template <typename T = float>
+    T get(float t);
 
     static const std::string easeTypeToString(EaseType ease_type) {
         if(ease_type == EaseType::BEZIER){
@@ -173,33 +168,56 @@ protected:
         return cubic_bezier(p0y, p1y, p2y, p3y, t_bez);
     }
 
-    float get_value_at_time(const std::vector<Keyframe>& keys, float t) {
-        if (keys.empty()) return 0.0;
+    // vector<float> zeros(size_t n){
+    //     std::vector<float> vs(n, 0.0f);
+    //     return vs;
+    // }
+
+    vector<float> get_values_at_time(const std::vector<Keyframe>& keys, float t) {
+        if (keys.empty()) return {};
         if (t <= keys.front().time) return keys.front().value;
         if (t >= keys.back().time) return keys.back().value;
 
+        const size_t n = keys[0].value.size();
+
+        vector<float> result(n, 0.0f);
+
+        bool found = false;
         for (size_t i = 0; i < keys.size() - 1; ++i) {
             const auto& k0 = keys[i];
             const auto& k1 = keys[i + 1];
+
             if (t >= k0.time && t <= k1.time) {
-                if (k0.interpolationOut == EaseType::HOLD) {
-                    return k0.value;
-                } else if (k0.interpolationOut == EaseType::LINEAR) {
-                    float localT = (t - k0.time) / (k1.time - k0.time);
-                    return lerp(k0.value, k1.value, localT);
-                } else if (k0.interpolationOut == EaseType::BEZIER) {
-                    return bezier_interp(
-                        t,
-                        k0.time, k0.value, k0.outEase,
-                        k1.time, k1.value, k1.inEase
-                    );
-                } else {
-                    // fallback: linear
-                    float localT = (t - k0.time) / (k1.time - k0.time);
-                    return lerp(k0.value, k1.value, localT);
+                found = true;
+                for (size_t j = 0; j < n; ++j) {
+                    if (k0.interpolationOut == EaseType::HOLD) {
+                        result[j] = k0.value[j];
+                    } else if (k0.interpolationOut == EaseType::LINEAR) {
+                        float localT = (t - k0.time) / (k1.time - k0.time);
+                        result[j] = lerp(k0.value[j], k1.value[j], localT);
+                    } else if (k0.interpolationOut == EaseType::BEZIER) {
+                        result[j] = bezier_interp(
+                            t,
+                            k0.time, k0.value[j], k0.outEase,
+                            k1.time, k1.value[j], k1.inEase
+                        );
+                    } else {
+                        // fallback: linear
+                        float localT = (t - k0.time) / (k1.time - k0.time);
+                        result[j] = lerp(k0.value[j], k1.value[j], localT);
+                    }
+
+                    break;
                 }
             }
         }
-        return keys.back().value;
+
+        if(!found){
+            for (size_t j = 0; j < n; ++j) {
+                result[j] = keys.back().value[j];
+            }
+        }
+
+        return result;
     }
 };
