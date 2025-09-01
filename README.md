@@ -1,5 +1,13 @@
 # ofxAEEasingLoader
 
+![animation.gif](./docs/animation.gif)
+
+After Effects easings loader for openFrameworks.
+
+You can load selected keyframes (curves/easings) from After Effects.
+
+Tested on oF 0.12.0
+
 ## Usage
 
 1. Select curves (easings) or keyframes which you want to export
