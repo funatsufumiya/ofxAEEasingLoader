@@ -75,9 +75,50 @@ void ofApp::draw(){
 
 see [example2/src/ofApp.cpp](example2/src/ofApp.cpp) or [example2/src/ofApp.h](example2/src/ofApp.h) for detail.
 
-## TODOs
+## Example3: multiple tracks
 
-- Add multiple track case example
+Situation that multiple values of multiple tracks exported (in this case, X and Y in Layer "A", Rotation in Layer "B").
+
+![screenshot_tracks](./docs/screenshot_tracks.png)
+
+```cpp
+#include "ofxAEEasingLoader.h"
+
+ofxAEEasingLoader ae_easing;
+
+size_t property_index1;
+size_t property_index2;
+
+void ofApp::setup(){
+    ae_easing.load("test3.json");
+    property_index1 = ae_easing.getPropertyIndex("Position", "A");
+    property_index2 = ae_easing.getPropertyIndex("Rotation", "B");
+    
+//    ofSetRectMode(OF_RECTMODE_CENTER);
+}
+
+void ofApp::draw(){
+    float t = std::fmodf(ofGetElapsedTimef(), 6.0f);
+    ofVec2f p = ae_easing.get<ofVec2f>(t, property_index1);
+    float deg = ae_easing.get<float>(t, property_index2);
+
+    // NOTE:
+    // - you can also write directly: `.get(t, property_name, layer_name, [parent_name])`
+
+    ofDrawBitmapString("t: " + ofToString(t, 2), 50, 50);
+
+    ofDrawRectangle(p.x - 400, p.y - 100, 50, 50);
+    
+    ofPushStyle();
+    ofSetColor(255, 0, 0);
+    ofTranslate(200, 50);
+    ofRotateDeg(deg);
+    ofDrawRectangle(0, 0, 200, 50);
+    ofPopStyle();
+}
+```
+
+see [example3/src/ofApp.cpp](example3/src/ofApp.cpp) or [example3/src/ofApp.h](example2/src/ofApp.h) for detail.
 
 ## Notes
 
