@@ -133,7 +133,6 @@ protected:
         return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
     }
 
-    // reference: https://qiita.com/edo_m18/items/5e7e2b5e0e6e6e6e6e6e
     float bezier_interp(
         float t,
         float t0, float v0, const Ease& outEase,
