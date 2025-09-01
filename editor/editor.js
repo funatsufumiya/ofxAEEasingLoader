@@ -13,6 +13,7 @@ let timelineMax = 10; // Overall maximum time (seconds)
 let selected = -1;
 let dragging = false;
 let dragOffset = {x:0, y:0};
+let outHandleBackup = null; // {influence, speed} の一時保存
 let draggingHandle = null; // 'out' or 'in'
 let valueMin = 100, valueMax = 500;
 
@@ -272,16 +273,37 @@ function doubleClicked() {
 }
 
 function keyPressed() {
-  // 1=hold, 2=linear, 3=bezier
+  // 1=hold, 2=linear, 3=bezier, L/R=Handle toggle
   if(selected>=0){
     let k = keyframes[selected];
-    if(key==='a') k.outEase.influence = max(0, k.outEase.influence-5);
-    if(key==='d') k.outEase.influence = min(100, k.outEase.influence+5);
-    if(key==='w') k.outEase.speed += 10;
-    if(key==='s') k.outEase.speed -= 10;
     if(key==='1') { k.interpolationOut = 'hold'; redraw(); }
     if(key==='2') { k.interpolationOut = 'linear'; redraw(); }
     if(key==='3') { k.interpolationOut = 'bezier'; redraw(); }
+    // R
+    if(key==='r'||key==='R') {
+      if(k.outEase.influence===0 && k.outEase.speed===0 && outHandleBackup){
+        k.outEase.influence = outHandleBackup.influence>1?outHandleBackup.influence:33;
+        k.outEase.speed = Math.abs(outHandleBackup.speed)>0.01?outHandleBackup.speed:0;
+        outHandleBackup = null;
+      }else{
+        outHandleBackup = {influence: k.outEase.influence, speed: k.outEase.speed};
+        k.outEase.influence = 0; k.outEase.speed = 0;
+      }
+      redraw();
+    }
+    // L
+    if((key==='l'||key==='L') && selected>0){
+      let kin = keyframes[selected];
+      if(kin.inEase.influence===0 && kin.inEase.speed===0 && inHandleBackup){
+        kin.inEase.influence = inHandleBackup.influence>1?inHandleBackup.influence:33;
+        kin.inEase.speed = Math.abs(inHandleBackup.speed)>0.01?inHandleBackup.speed:0;
+        inHandleBackup = null;
+      }else{
+        inHandleBackup = {influence: kin.inEase.influence, speed: kin.inEase.speed};
+        kin.inEase.influence = 0; kin.inEase.speed = 0;
+      }
+      redraw();
+    }
   }
 }
 
