@@ -51,7 +51,7 @@ function setup() {
 
   let ui = document.getElementById('ui');
 
-  // トラック切り替えUI
+  // Track switching UI
   let trackDiv = document.createElement('div');
   trackDiv.id = 'track-controls';
   trackDiv.style.marginBottom = '8px';
@@ -69,14 +69,14 @@ function setup() {
       opt.textContent = `Track ${i}`;
       trackSelect.appendChild(opt);
     }
-    // 選択indexが範囲外なら0に
+    // If the selected index is out of range, set it to 0
     if (selectedTrackIndex < 0 || selectedTrackIndex >= keyframesArray.length) selectedTrackIndex = 0;
     trackSelect.value = selectedTrackIndex;
   };
   window.updateTrackSelect();
   trackSelect.addEventListener('change', (e) => {
     selectedTrackIndex = parseInt(e.target.value);
-    // メタ情報UIも更新
+    // Update meta information UI
     updateMetaInputs();
     redraw();
   });
