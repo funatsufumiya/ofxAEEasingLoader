@@ -11,15 +11,15 @@ void ofApp::setup(){
     
     //  dumpTracks() shows:
     //    [notice ] ------------
-    //    [notice ] property_name: Position
-    //    [notice ] layer_name: A
-    //    [notice ] parent_name: Transform
-    //    [notice ] ( match_name: ADBE Position )
+    //    [notice ] property_name: 'Position'
+    //    [notice ] layer_name: 'A'
+    //    [notice ] parent_name: 'Transform'
+    //    [notice ] ( match_name: 'ADBE Position' )
     //    [notice ] ------------
-    //    [notice ] property_name: Rotation
-    //    [notice ] layer_name: B
-    //    [notice ] parent_name: Transform
-    //    [notice ] ( match_name: ADBE Rotate Z )
+    //    [notice ] property_name: 'Rotation'
+    //    [notice ] layer_name: 'B'
+    //    [notice ] parent_name: 'Transform'
+    //    [notice ] ( match_name: 'ADBE Rotate Z' )
     
     property_index1 = ae_easing.getPropertyIndex("Position", "A");
     property_index2 = ae_easing.getPropertyIndex("Rotation", "B");

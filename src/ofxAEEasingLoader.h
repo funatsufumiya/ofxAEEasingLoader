@@ -90,10 +90,10 @@ public:
     void dumpTracks(){
         for(auto&& t: tracks){
             ofLog() << "------------";
-            ofLog() << "property_name: " << t.propertyName;
-            ofLog() << "layer_name: " << t.layerName;
-            ofLog() << "parent_name: " << t.parentName;
-            ofLog() << "( match_name: " << t.matchName << " )";
+            ofLog() << "property_name: '" << t.propertyName << "'";
+            ofLog() << "layer_name: '" << t.layerName << "'";
+            ofLog() << "parent_name: '" << t.parentName << "'";
+            ofLog() << "( match_name: '" << t.matchName << "' )";
         }
     }
 
