@@ -28,11 +28,98 @@ let outHandleBackup = null; // {influence, speed} temporally backup
 let draggingHandle = null; // 'out' or 'in'
 let valueMin = 0, valueMax = 500;
 
+function getValueArray(val) {
+  if (Array.isArray(val)) return val;
+  return [val];
+}
+function getValueIndex(val, idx) {
+  if (Array.isArray(val)) return val[idx];
+  return idx === 0 ? val : undefined;
+}
+function setValueIndex(val, idx, v) {
+  if (Array.isArray(val)) {
+    val[idx] = v;
+    return val;
+  } else if (idx === 0) {
+    return v;
+  } else {
+    return val;
+  }
+}
+
 function setup() {
+
+  let ui = document.getElementById('ui');
+
+  // トラック切り替えUI
+  let trackDiv = document.createElement('div');
+  trackDiv.id = 'track-controls';
+  trackDiv.style.marginBottom = '8px';
+  if (ui) ui.insertBefore(trackDiv, ui.firstChild);
+
+  let trackSelect = document.createElement('select');
+  trackSelect.id = 'track-select';
+  window.updateTrackSelect = function() {
+    const trackSelect = document.getElementById('track-select');
+    if (!trackSelect) return;
+    trackSelect.innerHTML = '';
+    for (let i = 0; i < keyframesArray.length; i++) {
+      let opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `Track ${i}`;
+      trackSelect.appendChild(opt);
+    }
+    // 選択indexが範囲外なら0に
+    if (selectedTrackIndex < 0 || selectedTrackIndex >= keyframesArray.length) selectedTrackIndex = 0;
+    trackSelect.value = selectedTrackIndex;
+  };
+  window.updateTrackSelect();
+  trackSelect.addEventListener('change', (e) => {
+    selectedTrackIndex = parseInt(e.target.value);
+    // メタ情報UIも更新
+    updateMetaInputs();
+    redraw();
+  });
+  trackDiv.appendChild(trackSelect);
+
+  let addBtn = document.createElement('button');
+  addBtn.textContent = '＋';
+  addBtn.title = 'Add Track';
+  addBtn.onclick = () => {
+    keyframesArray.push([]);
+    metaDataArray.push({propertyName:'',parentName:'',layerName:'',matchName:''});
+    selectedTrackIndex = keyframesArray.length-1;
+    updateTrackSelect();
+    updateMetaInputs();
+    redraw();
+  };
+  trackDiv.appendChild(addBtn);
+
+  let delBtn = document.createElement('button');
+  delBtn.textContent = '－';
+  delBtn.title = 'Delete Track';
+  delBtn.onclick = () => {
+    if (keyframesArray.length <= 1) return;
+    keyframesArray.splice(selectedTrackIndex,1);
+    metaDataArray.splice(selectedTrackIndex,1);
+    if (selectedTrackIndex >= keyframesArray.length) selectedTrackIndex = keyframesArray.length-1;
+    updateTrackSelect();
+    updateMetaInputs();
+    redraw();
+  };
+  trackDiv.appendChild(delBtn);
+
+  window.updateMetaInputs = function() {
+    const metaProps = ['propertyName','parentName','layerName','matchName'];
+    metaProps.forEach(prop => {
+      let input = document.getElementById('meta-'+prop);
+      if (input) input.value = metaDataArray[selectedTrackIndex][prop] || '';
+    });
+  };
+
   createValueIndexSelector();
 
   // metadata input
-  let ui = document.getElementById('ui');
   let metaDiv = document.createElement('div');
   metaDiv.id = 'meta-info';
   metaDiv.style.marginBottom = '8px';
@@ -48,7 +135,7 @@ function setup() {
     input.value = metaDataArray[selectedTrackIndex][prop] || '';
     input.id = 'meta-'+prop;
     input.style.marginRight = '12px';
-    // 入力時にmetaDataArrayを更新
+    // Update metaDataArray on input
     input.addEventListener('input', (e) => {
       metaDataArray[selectedTrackIndex][prop] = e.target.value;
     });
@@ -136,8 +223,8 @@ function createValueIndexSelector() {
   if (old) old.remove();
   // Get the length of the value array
   let len = 1;
-  if (keyframesArray[selectedTrackIndex].length > 0 && Array.isArray(keyframesArray[selectedTrackIndex][0].value)) {
-    len = keyframesArray[selectedTrackIndex][0].value.length;
+  if (keyframesArray[selectedTrackIndex].length > 0) {
+    len = getValueArray(keyframesArray[selectedTrackIndex][0].value).length;
   }
   // Create selector
   const sel = document.createElement('select');
@@ -193,7 +280,7 @@ function drawKeyframes() {
   for(let i=0; i<keyframesArray[selectedTrackIndex].length; i++){
     let k = keyframesArray[selectedTrackIndex][i];
     let x = timeToX(k.time);
-    let y = valueToY(k.value[selectedValueIndex]);
+    let y = valueToY(getValueIndex(k.value, selectedValueIndex));
     if(x<60||x>width-40) continue;
     fill(i===selected? 'yellow':'cyan');
     stroke(0); ellipse(x, y, 14, 14);
@@ -210,7 +297,7 @@ function drawHandles() {
   if(selected<0 || selected>=keyframesArray[selectedTrackIndex].length-1) return;
   let k0 = keyframesArray[selectedTrackIndex][selected], k1 = keyframesArray[selectedTrackIndex][selected+1];
   let t0 = k0.time, t1 = k1.time;
-  let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
+  let v0 = getValueIndex(k0.value, selectedValueIndex), v1 = getValueIndex(k1.value, selectedValueIndex);
   let dt = t1-t0;
   if(dt<=0) return;
   // Control point calculation
@@ -246,7 +333,7 @@ function mousePressed() {
   if(selected>=0 && selected<keyframesArray[selectedTrackIndex].length-1){
     let k0 = keyframesArray[selectedTrackIndex][selected], k1 = keyframesArray[selectedTrackIndex][selected+1];
     let t0 = k0.time, t1 = k1.time;
-    let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
+  let v0 = getValueIndex(k0.value, selectedValueIndex), v1 = getValueIndex(k1.value, selectedValueIndex);
     let dt = t1-t0;
     if(dt>0){
       let p1x = timeToX(t0 + (t1-t0)*k0.outEase.influence/100.0);
@@ -262,9 +349,12 @@ function mousePressed() {
     let t = xToTime(mouseX);
     let v = yToValue(mouseY);
     // When adding, match the length of the existing keyframe's value array
-    let arrLen = keyframesArray[selectedTrackIndex].length>0 && Array.isArray(keyframesArray[selectedTrackIndex][0].value) ? keyframesArray[selectedTrackIndex][0].value.length : 3;
-    let valArr = new Array(arrLen).fill(0);
-    valArr[selectedValueIndex] = constrain(v,valueMin,valueMax);
+    let arrLen = 1;
+    if (keyframesArray[selectedTrackIndex].length>0) {
+      arrLen = getValueArray(keyframesArray[selectedTrackIndex][0].value).length;
+    }
+    let valArr = arrLen === 1 ? constrain(v,valueMin,valueMax) : new Array(arrLen).fill(0);
+    if (arrLen > 1) valArr[selectedValueIndex] = constrain(v,valueMin,valueMax);
     keyframesArray[selectedTrackIndex].push({
       time: constrain(t,0,timelineMax),
       value: valArr,
@@ -278,8 +368,8 @@ function mousePressed() {
   // Select
   for(let i=0; i<keyframesArray[selectedTrackIndex].length; i++){
     let k = keyframesArray[selectedTrackIndex][i];
-    let x = timeToX(k.time);
-    let y = valueToY(k.value[selectedValueIndex]);
+  let x = timeToX(k.time);
+  let y = valueToY(getValueIndex(k.value, selectedValueIndex));
     if(dist(mouseX, mouseY, x, y)<10){
       selected = i;
       dragging = true;
@@ -297,7 +387,7 @@ function mouseDragged() {
   if(draggingHandle && selected>=0 && selected<keyframesArray[selectedTrackIndex].length-1){
     let k0 = keyframesArray[selectedTrackIndex][selected], k1 = keyframesArray[selectedTrackIndex][selected+1];
     let t0 = k0.time, t1 = k1.time;
-    let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
+  let v0 = getValueIndex(k0.value, selectedValueIndex), v1 = getValueIndex(k1.value, selectedValueIndex);
     let dt = t1-t0;
     let px = mouseX-dragOffset.x, py = mouseY-dragOffset.y;
     if(draggingHandle==='out'){
@@ -319,11 +409,12 @@ function mouseDragged() {
   if(dragging && selected>=0){
     let t = xToTime(mouseX-dragOffset.x);
     let v = yToValue(mouseY-dragOffset.y);
-    keyframesArray[selectedTrackIndex][selected].time = constrain(t,0,timelineMax);
-    keyframesArray[selectedTrackIndex][selected].value[selectedValueIndex] = constrain(v,valueMin,valueMax);
-    keyframesArray[selectedTrackIndex].sort((a,b)=>a.time-b.time);
-    selected = keyframesArray[selectedTrackIndex].findIndex(k=>k===keyframesArray[selectedTrackIndex][selected]);
-    redraw();
+  keyframesArray[selectedTrackIndex][selected].time = constrain(t,0,timelineMax);
+  let curVal = keyframesArray[selectedTrackIndex][selected].value;
+  keyframesArray[selectedTrackIndex][selected].value = setValueIndex(curVal, selectedValueIndex, constrain(v,valueMin,valueMax));
+  keyframesArray[selectedTrackIndex].sort((a,b)=>a.time-b.time);
+  selected = keyframesArray[selectedTrackIndex].findIndex(k=>k===keyframesArray[selectedTrackIndex][selected]);
+  redraw();
   }
 }
 
@@ -336,8 +427,8 @@ function doubleClicked() {
   // Double-click to delete
   for(let i=0; i<keyframesArray[selectedTrackIndex].length; i++){
     let k = keyframesArray[selectedTrackIndex][i];
-    let x = timeToX(k.time);
-  let y = valueToY(k.value[selectedValueIndex]);
+  let x = timeToX(k.time);
+  let y = valueToY(getValueIndex(k.value, selectedValueIndex));
     if(dist(mouseX, mouseY, x, y)<10){
       keyframesArray[selectedTrackIndex].splice(i,1);
       selected = -1;
@@ -384,31 +475,31 @@ function keyPressed() {
 
 function getValueAtTime(t){
   if(keyframesArray[selectedTrackIndex].length===0) return [0,0,0];
-  if(t<=keyframesArray[selectedTrackIndex][0].time) return keyframesArray[selectedTrackIndex][0].value;
-  if(t>=keyframesArray[selectedTrackIndex][keyframesArray[selectedTrackIndex].length-1].time) return keyframesArray[selectedTrackIndex][keyframesArray[selectedTrackIndex].length-1].value;
+  if(t<=keyframesArray[selectedTrackIndex][0].time) return getValueArray(keyframesArray[selectedTrackIndex][0].value);
+  if(t>=keyframesArray[selectedTrackIndex][keyframesArray[selectedTrackIndex].length-1].time) return getValueArray(keyframesArray[selectedTrackIndex][keyframesArray[selectedTrackIndex].length-1].value);
   let i=1;
   while(i<keyframesArray[selectedTrackIndex].length && keyframesArray[selectedTrackIndex][i].time<t) i++;
   let k0 = keyframesArray[selectedTrackIndex][i-1], k1 = keyframesArray[selectedTrackIndex][i];
   let localT = (t-k0.time)/(k1.time-k0.time);
   // HOLD
   if(k0.interpolationOut==='hold'){
-    let arr = k0.value.slice();
+    let arr = getValueArray(k0.value).slice();
     return arr;
   }
   // LINEAR
   if(k0.interpolationOut==='linear' || k1.interpolationIn==='linear'){
-    let arr = k0.value.slice();
-    arr[selectedValueIndex] = lerp(k0.value[selectedValueIndex], k1.value[selectedValueIndex], localT);
+    let arr = getValueArray(k0.value).slice();
+    arr[selectedValueIndex] = lerp(getValueIndex(k0.value, selectedValueIndex), getValueIndex(k1.value, selectedValueIndex), localT);
     return arr;
   }
   // BEZIER
   if(k0.interpolationOut==='bezier' && k1.interpolationIn==='bezier'){
     let t0 = k0.time, t1 = k1.time;
-    let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
+    let v0 = getValueIndex(k0.value, selectedValueIndex), v1 = getValueIndex(k1.value, selectedValueIndex);
     let outEase = k0.outEase, inEase = k1.inEase;
     let dt = t1 - t0;
     if(dt <= 0) {
-      let arr = k0.value.slice();
+      let arr = getValueArray(k0.value).slice();
       return arr;
     }
     // Control point calculation
@@ -434,13 +525,13 @@ function getValueAtTime(t){
     }
     let t_bez = guess;
     let y = cubicBezier(p0y, p1y, p2y, p3y, t_bez);
-    let arr = k0.value.slice();
+    let arr = getValueArray(k0.value).slice();
     arr[selectedValueIndex] = y;
     return arr;
   }
   // fallback: linear
-  let arr = k0.value.slice();
-  arr[selectedValueIndex] = lerp(k0.value[selectedValueIndex], k1.value[selectedValueIndex], localT);
+  let arr = getValueArray(k0.value).slice();
+  arr[selectedValueIndex] = lerp(getValueIndex(k0.value, selectedValueIndex), getValueIndex(k1.value, selectedValueIndex), localT);
   return arr;
 }
 
@@ -463,14 +554,12 @@ function yToValue(y){
 }
 
 function saveJson(){
-  // Reflect the values of metaDataArray[selectedTrackIndex]
-  let meta = metaDataArray[selectedTrackIndex];
-  let data = [{
+  let data = metaDataArray.map((meta, i) => ({
     propertyName: meta.propertyName,
     parentName: meta.parentName,
     layerName: meta.layerName,
     matchName: meta.matchName,
-    keys: keyframesArray[selectedTrackIndex].map(k=>({
+    keys: keyframesArray[i].map(k=>({
       time: k.time,
       value: k.value,
       inEase: [k.inEase],
@@ -478,7 +567,7 @@ function saveJson(){
       interpolationIn: k.interpolationIn,
       interpolationOut: k.interpolationOut
     }))
-  }];
+  }));
   let str = JSON.stringify(data,null,2);
   document.getElementById('output').textContent = str;
   let blob = new Blob([str],{type:'application/json'});
@@ -494,51 +583,45 @@ function loadJson(event){
   let reader = new FileReader();
   reader.onload = function(e){
     let data = JSON.parse(e.target.result);
-    // Display metadata
-    if(data[0]){
-      // Update metaDataArray[selectedTrackIndex]
-      const metaProps = ['propertyName','parentName','layerName','matchName'];
-      metaDataArray[selectedTrackIndex] = {};
-      metaProps.forEach(prop => {
-        metaDataArray[selectedTrackIndex][prop] = data[0][prop] !== undefined ? data[0][prop] : '';
-      });
-      // Regenerate input fields
-      let metaDiv = document.getElementById('meta-info');
-      if(metaDiv) {
-        metaDiv.innerHTML = '';
+    // Restore all tracks
+    if(Array.isArray(data) && data.length > 0){
+      keyframesArray = [];
+      metaDataArray = [];
+      data.forEach((track, i) => {
+        // Meta information
+        const metaProps = ['propertyName','parentName','layerName','matchName'];
+        let meta = {};
         metaProps.forEach(prop => {
-          let val = metaDataArray[selectedTrackIndex][prop];
-          let label = document.createElement('label');
-          label.textContent = prop+': ';
-          label.style.marginRight = '4px';
-          let input = document.createElement('input');
-          input.type = 'text';
-          input.value = val;
-          input.id = 'meta-'+prop;
-          input.style.marginRight = '12px';
-          input.addEventListener('input', (e) => {
-            metaDataArray[selectedTrackIndex][prop] = e.target.value;
-          });
-          metaDiv.appendChild(label);
-          metaDiv.appendChild(input);
+          meta[prop] = track[prop] !== undefined ? track[prop] : '';
         });
-      }
-    }
-    if(data[0] && data[0].keys){
-      keyframesArray[selectedTrackIndex] = data[0].keys.map(k=>({
-        time: k.time,
-        value: k.value,
-        inEase: k.inEase[0],
-        outEase: k.outEase[0],
-        interpolationIn: k.interpolationIn,
-        interpolationOut: k.interpolationOut
-      }));
-      keyframesArray[selectedTrackIndex].sort((a,b)=>a.time-b.time);
-      // Timeline auto-adjustment
+        metaDataArray.push(meta);
+        // Keyframes
+        if(track.keys){
+          let kfs = track.keys.map(k=>({
+            time: k.time,
+            value: k.value,
+            inEase: k.inEase[0],
+            outEase: k.outEase[0],
+            interpolationIn: k.interpolationIn,
+            interpolationOut: k.interpolationOut
+          }));
+          kfs.sort((a,b)=>a.time-b.time);
+          keyframesArray.push(kfs);
+        }else{
+          keyframesArray.push([]);
+        }
+      });
+      // Track selection index adjustment
+      selectedTrackIndex = 0;
+      // Track select UI update
+      let trackSelect = document.getElementById('track-select');
+      if(trackSelect && typeof updateTrackSelect === 'function') updateTrackSelect();
+      // Meta information UI update
+      if(typeof updateMetaInputs === 'function') updateMetaInputs();
+      // Timeline auto-adjustment (only for the selected track)
       let last = keyframesArray[selectedTrackIndex][keyframesArray[selectedTrackIndex].length-1];
       if(last && last.time>timelineMax) {
         timelineMax = last.time+1;
-        // update timelineMax input and sliders
         let maxTimeInput = select('#timelinemax-input');
         if(maxTimeInput) maxTimeInput.value(timelineMax);
         let rangeSlider = select('#display-range-slider');
