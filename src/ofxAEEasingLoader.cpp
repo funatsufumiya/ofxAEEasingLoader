@@ -27,7 +27,7 @@ float ofxAEEasingLoader::get(std::string name, float t){
 
 template <>
 float ofxAEEasingLoader::get(int index, float t){
-    return get<vector<float>>(0, t).at(0);
+    return get<vector<float>>(index, t).at(0);
 }
 
 template <>
