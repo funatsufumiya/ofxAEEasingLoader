@@ -16,8 +16,7 @@ void ofApp::draw(){
     ofVec2f p = ae_easing.get<ofVec2f>(t);
 
     // NOTE:
-    // - you can also specify property name: `ae_easing.get("prop name", t)`
-    // - alternatively, specify index: `ae_easing.get(0, t)` ( `.get(t)` is short for `.get(0, t)` )
+    // - you can also use vector: `ae_easing.get<vector<float>>(t)`
 
     ofDrawBitmapString("t: " + ofToString(t, 2), 50, 50);
 

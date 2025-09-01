@@ -16,7 +16,7 @@ Tested on oF 0.12.0
 
 2. Export it by using [tools/exportSelectedEasing.jsx](tools/exportSelectedEasing.jsx) on File > Script > Execute menu.
 
-## Example
+## Example1: single value
 
 ```cpp
 #include "ofxAEEasingLoader.h"
@@ -42,6 +42,35 @@ void ofApp::draw(){
 ```
 
 see [example/src/ofApp.cpp](example/src/ofApp.cpp) or [example/src/ofApp.h](example/src/ofApp.h) for detail.
+
+## Example2: multiple value
+
+In this case, values exported with multiple (in this case, X and Y).
+
+![screenshot_multiple](./docs/screenshot_multiple.png)
+
+```cpp
+#include "ofxAEEasingLoader.h"
+
+ofxAEEasingLoader ae_easing;
+
+void ofApp::setup(){
+    ae_easing.load("test2.json");
+}
+
+void ofApp::draw(){
+    float t = std::fmodf(ofGetElapsedTimef(), 6.0f);
+    ofVec2f p = ae_easing.get<ofVec2f>(t);
+
+    // NOTE:
+    // - you can also use vector: `ae_easing.get<vector<float>>(t)`
+
+    ofDrawBitmapString("t: " + ofToString(t, 2), 50, 50);
+
+    ofDrawRectangle(p.x - 400, p.y - 100, 50, 50);
+}
+```
+
 
 ## Notes
 
