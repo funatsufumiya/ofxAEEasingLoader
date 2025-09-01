@@ -1,3 +1,5 @@
+ #include "json2.js";
+
 (function() {
     var FOLDER = Folder.selectDialog('Select a folder to export');
     if(!FOLDER) {
