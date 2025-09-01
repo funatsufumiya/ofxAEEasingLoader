@@ -13,6 +13,7 @@ let timelineMax = 10; // Overall maximum time (seconds)
 let selected = -1;
 let dragging = false;
 let dragOffset = {x:0, y:0};
+let draggingHandle = null; // 'out' or 'in'
 let valueMin = 100, valueMax = 500;
 
 function setup() {
@@ -128,7 +129,31 @@ function drawKeyframes() {
     noStroke(); fill(255,180,0); textSize(10);
     text(k.interpolationOut[0].toUpperCase(), x, y-12);
   }
+  // Bezier handle drawing
+  drawHandles();
   textSize(12);
+}
+
+function drawHandles() {
+  if(selected<0 || selected>=keyframes.length-1) return;
+  let k0 = keyframes[selected], k1 = keyframes[selected+1];
+  let t0 = k0.time, t1 = k1.time;
+  let v0 = k0.value[1], v1 = k1.value[1];
+  let dt = t1-t0;
+  if(dt<=0) return;
+  // Control point calculation
+  let p0x = timeToX(t0), p0y = valueToY(v0);
+  let p3x = timeToX(t1), p3y = valueToY(v1);
+  let p1x = timeToX(t0 + (t1-t0)*k0.outEase.influence/100.0);
+  let p1y = valueToY(v0 + k0.outEase.speed*dt*(k0.outEase.influence/100.0));
+  let p2x = timeToX(t1 - (t1-t0)*k1.inEase.influence/100.0);
+  let p2y = valueToY(v1 - k1.inEase.speed*dt*(k1.inEase.influence/100.0));
+  // Guide lines
+  stroke(120,180,255,120); strokeWeight(1);
+  line(p0x,p0y,p1x,p1y); line(p3x,p3y,p2x,p2y);
+  // Handles
+  fill('orange'); stroke(0); ellipse(p1x,p1y,10,10);
+  fill('lime'); stroke(0); ellipse(p2x,p2y,10,10);
 }
 
 function drawCurve() {
@@ -144,6 +169,22 @@ function drawCurve() {
 }
 
 function mousePressed() {
+  // Bezier handle hit detection
+  draggingHandle = null;
+  if(selected>=0 && selected<keyframes.length-1){
+    let k0 = keyframes[selected], k1 = keyframes[selected+1];
+    let t0 = k0.time, t1 = k1.time;
+    let v0 = k0.value[1], v1 = k1.value[1];
+    let dt = t1-t0;
+    if(dt>0){
+      let p1x = timeToX(t0 + (t1-t0)*k0.outEase.influence/100.0);
+      let p1y = valueToY(v0 + k0.outEase.speed*dt*(k0.outEase.influence/100.0));
+      let p2x = timeToX(t1 - (t1-t0)*k1.inEase.influence/100.0);
+      let p2y = valueToY(v1 - k1.inEase.speed*dt*(k1.inEase.influence/100.0));
+      if(dist(mouseX,mouseY,p1x,p1y)<10){ draggingHandle='out'; dragOffset.x=mouseX-p1x; dragOffset.y=mouseY-p1y; return; }
+      if(dist(mouseX,mouseY,p2x,p2y)<10){ draggingHandle='in'; dragOffset.x=mouseX-p2x; dragOffset.y=mouseY-p2y; return; }
+    }
+  }
   if(mouseButton===RIGHT){
     // Right-click to add
     let t = xToTime(mouseX);
@@ -177,6 +218,28 @@ function mousePressed() {
 }
 
 function mouseDragged() {
+  if(draggingHandle && selected>=0 && selected<keyframes.length-1){
+    let k0 = keyframes[selected], k1 = keyframes[selected+1];
+    let t0 = k0.time, t1 = k1.time;
+    let v0 = k0.value[1], v1 = k1.value[1];
+    let dt = t1-t0;
+    let px = mouseX-dragOffset.x, py = mouseY-dragOffset.y;
+    if(draggingHandle==='out'){
+      // out handle
+      let relT = constrain((xToTime(px)-t0)/(t1-t0), 0, 1);
+      k0.outEase.influence = relT*100;
+      let relV = yToValue(py)-v0;
+      k0.outEase.speed = dt>0 && relT>0 ? relV/(dt*relT) : 0;
+    }else if(draggingHandle==='in'){
+      // in handle
+      let relT = constrain((t1-xToTime(px))/(t1-t0), 0, 1);
+      k1.inEase.influence = relT*100;
+      let relV = v1-yToValue(py);
+      k1.inEase.speed = dt>0 && relT>0 ? relV/(dt*relT) : 0;
+    }
+    redraw();
+    return;
+  }
   if(dragging && selected>=0){
     let t = xToTime(mouseX-dragOffset.x);
     let v = yToValue(mouseY-dragOffset.y);
@@ -190,6 +253,7 @@ function mouseDragged() {
 
 function mouseReleased() {
   dragging = false;
+  draggingHandle = null;
 }
 
 function doubleClicked() {
