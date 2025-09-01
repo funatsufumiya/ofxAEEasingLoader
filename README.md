@@ -141,6 +141,9 @@ see [example3/src/ofApp.cpp](example3/src/ofApp.cpp) or [example3/src/ofApp.h](e
 - Property name (and parent name) is localized by your language setting of AE. We recommend to use English (for example, on Windows, put `ae_force_english.txt` on Documents folder.)
   - Please not that `property_name` matches both property_name (localized) and match_name. 
 
+## Appendix: json editor
+
+Simple p5.js json file editor is in [`./editor`](./editor/).
 
 ## License
 
