@@ -91,7 +91,9 @@ public:
 
     /// @brief alias of get(0, t)
     template <typename T = float>
-    T get(float t);
+    T get(float t) {
+        return get<T>(0, t);
+    }
 
     static const std::string easeTypeToString(EaseType ease_type) {
         if(ease_type == EaseType::BEZIER){
@@ -206,9 +208,9 @@ protected:
                         float localT = (t - k0.time) / (k1.time - k0.time);
                         result[j] = lerp(k0.value[j], k1.value[j], localT);
                     }
-
-                    break;
                 }
+
+                break;
             }
         }
 

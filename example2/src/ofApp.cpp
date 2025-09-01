@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    ae_easing.load("test.json");
+    ae_easing.load("test2.json");
 }
 
 //--------------------------------------------------------------
@@ -12,8 +12,8 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    float t = std::fmodf(ofGetElapsedTimef(), 14.0f);
-    float y = ae_easing.get(t);
+    float t = std::fmodf(ofGetElapsedTimef(), 6.0f);
+    ofVec2f p = ae_easing.get<ofVec2f>(t);
 
     // NOTE:
     // - you can also specify property name: `ae_easing.get("prop name", t)`
@@ -21,7 +21,7 @@ void ofApp::draw(){
 
     ofDrawBitmapString("t: " + ofToString(t, 2), 50, 50);
 
-    ofDrawRectangle(100, y - 600, 50, 50);
+    ofDrawRectangle(p.x - 400, p.y - 100, 50, 50);
 }
 
 //--------------------------------------------------------------

@@ -31,6 +31,37 @@ float ofxAEEasingLoader::get(int index, float t){
 }
 
 template <>
-float ofxAEEasingLoader::get(float t){
-    return get<float>(0, t);
+ofVec2f ofxAEEasingLoader::get(std::string name, float t){
+    auto v = get<vector<float>>(name, t);
+    return ofVec2f(v.at(0), v.at(1));
+}
+
+template <>
+ofVec2f ofxAEEasingLoader::get(int index, float t){
+    auto v = get<vector<float>>(index, t);
+    return ofVec2f(v.at(0), v.at(1));
+}
+
+template <>
+ofVec3f ofxAEEasingLoader::get(std::string name, float t){
+    auto v = get<vector<float>>(name, t);
+    return ofVec3f(v.at(0), v.at(1), v.at(2));
+}
+
+template <>
+ofVec3f ofxAEEasingLoader::get(int index, float t){
+    auto v = get<vector<float>>(index, t);
+    return ofVec3f(v.at(0), v.at(1), v.at(2));
+}
+
+template <>
+ofVec4f ofxAEEasingLoader::get(std::string name, float t){
+    auto v = get<vector<float>>(name, t);
+    return ofVec4f(v.at(0), v.at(1), v.at(2), v.at(3));
+}
+
+template <>
+ofVec4f ofxAEEasingLoader::get(int index, float t){
+    auto v = get<vector<float>>(index, t);
+    return ofVec4f(v.at(0), v.at(1), v.at(2), v.at(3));
 }
