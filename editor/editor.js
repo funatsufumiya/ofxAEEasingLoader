@@ -7,6 +7,16 @@ let keyframes = [
   { time: 2, value: [400, 400, 0], interpolationOut: 'bezier', interpolationIn: 'bezier', outEase: {influence: 33, speed: 0}, inEase: {influence: 33, speed: 0} }
 ];
 
+let metaDataArray = [
+  {
+    propertyName: 'Position',
+    parentName: '',
+    layerName: '',
+    matchName: 'ABDE Position'
+  }
+];
+let selectedTrackIndex = 0;
+
 let timelineLen = 5; // Display range (seconds)
 let timelineStart = 0; // Scroll position (seconds)
 let timelineMax = 10; // Overall maximum time (seconds)
@@ -35,9 +45,13 @@ function setup() {
     label.style.marginRight = '4px';
     let input = document.createElement('input');
     input.type = 'text';
-    input.value = '';
+    input.value = metaDataArray[selectedTrackIndex][prop] || '';
     input.id = 'meta-'+prop;
     input.style.marginRight = '12px';
+    // 入力時にmetaDataArrayを更新
+    input.addEventListener('input', (e) => {
+      metaDataArray[selectedTrackIndex][prop] = e.target.value;
+    });
     metaDiv.appendChild(label);
     metaDiv.appendChild(input);
   });
@@ -247,7 +261,7 @@ function mousePressed() {
     // Right-click to add
     let t = xToTime(mouseX);
     let v = yToValue(mouseY);
-    // 追加時: 既存keyframeのvalue配列長に合わせる
+    // When adding, match the length of the existing keyframe's value array
     let arrLen = keyframes.length>0 && Array.isArray(keyframes[0].value) ? keyframes[0].value.length : 3;
     let valArr = new Array(arrLen).fill(0);
     valArr[selectedValueIndex] = constrain(v,valueMin,valueMax);
@@ -449,11 +463,13 @@ function yToValue(y){
 }
 
 function saveJson(){
+  // Reflect the values of metaDataArray[selectedTrackIndex]
+  let meta = metaDataArray[selectedTrackIndex];
   let data = [{
-    propertyName: 'Position',
-    parentName: '',
-    layerName: '',
-    matchName: 'ADBE Position',
+    propertyName: meta.propertyName,
+    parentName: meta.parentName,
+    layerName: meta.layerName,
+    matchName: meta.matchName,
     keys: keyframes.map(k=>({
       time: k.time,
       value: k.value,
@@ -480,13 +496,18 @@ function loadJson(event){
     let data = JSON.parse(e.target.result);
     // Display metadata
     if(data[0]){
+      // Update metaDataArray[selectedTrackIndex]
+      const metaProps = ['propertyName','parentName','layerName','matchName'];
+      metaDataArray[selectedTrackIndex] = {};
+      metaProps.forEach(prop => {
+        metaDataArray[selectedTrackIndex][prop] = data[0][prop] !== undefined ? data[0][prop] : '';
+      });
+      // Regenerate input fields
       let metaDiv = document.getElementById('meta-info');
       if(metaDiv) {
         metaDiv.innerHTML = '';
-        // Properties to display
-        const metaProps = ['propertyName','parentName','layerName','matchName'];
         metaProps.forEach(prop => {
-          let val = data[0][prop] !== undefined ? data[0][prop] : '';
+          let val = metaDataArray[selectedTrackIndex][prop];
           let label = document.createElement('label');
           label.textContent = prop+': ';
           label.style.marginRight = '4px';
@@ -495,6 +516,9 @@ function loadJson(event){
           input.value = val;
           input.id = 'meta-'+prop;
           input.style.marginRight = '12px';
+          input.addEventListener('input', (e) => {
+            metaDataArray[selectedTrackIndex][prop] = e.target.value;
+          });
           metaDiv.appendChild(label);
           metaDiv.appendChild(input);
         });
