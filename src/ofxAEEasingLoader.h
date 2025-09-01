@@ -93,6 +93,7 @@ public:
         return get_value_at_time(track.keyframes, t);
     }
 
+    /// @brief alias of get(0, t)
     float get(float t){
         return get(0, t);
     }

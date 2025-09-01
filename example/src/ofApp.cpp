@@ -15,6 +15,10 @@ void ofApp::draw(){
     float t = std::fmodf(ofGetElapsedTimef(), 14.0f);
     float y = ae_easing.get(t);
 
+    // NOTE:
+    // - you can also specify property name: `ae_easing.get("prop name", t)`
+    // - alternatively, specify index: `ae_easing.get(0, t)` ( `.get(t)` is short for `.get(0, t)` )
+
     ofDrawBitmapString("t: " + ofToString(t, 2), 50, 50);
 
     ofDrawRectangle(100, y - 600, 50, 50);
