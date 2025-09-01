@@ -1,5 +1,5 @@
 // Bezier Animation Editor (p5.js)
-// Simple 1-track, only supports Position3D
+// Simple 1-track, only supports Position
 // Right-click to add keyframes, drag to move, select to edit ease
 
 let keyframes = [
@@ -18,14 +18,74 @@ let valueMin = 100, valueMax = 500;
 function setup() {
   let cnv = createCanvas(700, 500);
   cnv.parent('canvas-container');
-  // Scroll bar
-  let slider = createSlider(0, timelineMax-timelineLen, 0, 0.01);
-  slider.id('timeline-scroll');
-  slider.style('width', '400px');
-  slider.parent('ui');
-  slider.input(()=>{
-    timelineStart = slider.value();
+  // timelineMax input
+  let maxTimeLabel = createSpan(' Timeline Max: ');
+  maxTimeLabel.parent('ui');
+  let maxTimeInput = createInput(timelineMax.toString(), 'number');
+  maxTimeInput.id('timelinemax-input');
+  maxTimeInput.style('width','60px');
+  maxTimeInput.parent('ui');
+  maxTimeInput.input(()=>{
+    let val = float(maxTimeInput.value());
+    if(val>1 && val>timelineLen){
+      timelineMax = val;
+      // update scroll and range sliders
+      scrollSlider.elt.max = timelineMax-timelineLen;
+      if(timelineStart>timelineMax-timelineLen) timelineStart = timelineMax-timelineLen;
+      scrollSlider.value(timelineStart);
+      rangeSlider.value(timelineLen/timelineMax);
+      redraw();
+    }
+  });
+  // Display range slider (ratio)
+  let rangeLabel = createSpan(' Display Range: ');
+  rangeLabel.parent('ui');
+  let rangeSlider = createSlider(0.05, 1.0, timelineLen/timelineMax, 0.01);
+  rangeSlider.id('display-range-slider');
+  rangeSlider.style('width','120px');
+  rangeSlider.parent('ui');
+  rangeSlider.input(()=>{
+    timelineLen = constrain(rangeSlider.value()*timelineMax, 0.05*timelineMax, timelineMax);
+    if(timelineStart>timelineMax-timelineLen) timelineStart = timelineMax-timelineLen;
+    scrollSlider.elt.max = timelineMax-timelineLen;
+    scrollSlider.value(timelineStart);
     redraw();
+  });
+  // Scroll bar
+  let scrollSlider = createSlider(0, timelineMax-timelineLen, 0, 0.01);
+  scrollSlider.id('timeline-scroll');
+  scrollSlider.style('width', '400px');
+  scrollSlider.parent('ui');
+  scrollSlider.input(()=>{
+    timelineStart = scrollSlider.value();
+    redraw();
+  });
+  // valueMin/valueMax input
+  let minLabel = createSpan(' Value Min: ');
+  minLabel.parent('ui');
+  let minInput = createInput(valueMin.toString(), 'number');
+  minInput.id('valuemin-input');
+  minInput.style('width','50px');
+  minInput.parent('ui');
+  minInput.input(()=>{
+    let val = float(minInput.value());
+    if(val<valueMax){
+      valueMin = val;
+      redraw();
+    }
+  });
+  let maxLabel = createSpan(' Value Max: ');
+  maxLabel.parent('ui');
+  let maxInput = createInput(valueMax.toString(), 'number');
+  maxInput.id('valuemax-input');
+  maxInput.style('width','50px');
+  maxInput.parent('ui');
+  maxInput.input(()=>{
+    let val = float(maxInput.value());
+    if(val>valueMin){
+      valueMax = val;
+      redraw();
+    }
   });
   noLoop();
 }
@@ -44,6 +104,15 @@ function drawTimeline() {
     let x = timeToX(timeVal);
     stroke(100); line(x, height-65, x, height-55);
     noStroke(); fill(180); textAlign(CENTER); text(nf(timeVal,1,2), x, height-40);
+  }
+  // Value axis (tick marks)
+  let nTicks = 6;
+  for(let i=0; i<=nTicks; i++){
+    let v = lerp(valueMin, valueMax, i/nTicks);
+    let y = valueToY(v);
+    stroke(80); line(55, y, 60, y);
+    noStroke(); fill(180); textAlign(RIGHT, CENTER); text(nf(v,1,0), 50, y);
+    stroke(40,40,40,60); line(60, y, width-40, y);
   }
 }
 
@@ -240,7 +309,16 @@ function loadJson(event){
       keyframes.sort((a,b)=>a.time-b.time);
       // Timeline auto-adjustment
       let last = keyframes[keyframes.length-1];
-      if(last && last.time>timelineMax) timelineMax = last.time+1;
+      if(last && last.time>timelineMax) {
+        timelineMax = last.time+1;
+        // update timelineMax input and sliders
+        let maxTimeInput = select('#timelinemax-input');
+        if(maxTimeInput) maxTimeInput.value(timelineMax);
+        let rangeSlider = select('#display-range-slider');
+        if(rangeSlider) rangeSlider.value(timelineLen/timelineMax);
+        let scrollSlider = select('#timeline-scroll');
+        if(scrollSlider) scrollSlider.elt.max = timelineMax-timelineLen;
+      }
       redraw();
     }
   };
