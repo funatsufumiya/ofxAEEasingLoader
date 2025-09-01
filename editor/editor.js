@@ -2,10 +2,10 @@
 // Simple 1-track, only supports Position (3D)
 // Right-click to add keyframes, drag to move, select to edit ease
 
-let keyframes = [
+let keyframesArray = [[
   { time: 0, value: [200, 200, 0], interpolationOut: 'bezier', interpolationIn: 'bezier', outEase: {influence: 33, speed: 0}, inEase: {influence: 33, speed: 0} },
   { time: 2, value: [400, 400, 0], interpolationOut: 'bezier', interpolationIn: 'bezier', outEase: {influence: 33, speed: 0}, inEase: {influence: 33, speed: 0} }
-];
+]];
 
 let metaDataArray = [
   {
@@ -136,8 +136,8 @@ function createValueIndexSelector() {
   if (old) old.remove();
   // Get the length of the value array
   let len = 1;
-  if (keyframes.length > 0 && Array.isArray(keyframes[0].value)) {
-    len = keyframes[0].value.length;
+  if (keyframesArray[selectedTrackIndex].length > 0 && Array.isArray(keyframesArray[selectedTrackIndex][0].value)) {
+    len = keyframesArray[selectedTrackIndex][0].value.length;
   }
   // Create selector
   const sel = document.createElement('select');
@@ -190,8 +190,8 @@ function drawTimeline() {
 }
 
 function drawKeyframes() {
-  for(let i=0; i<keyframes.length; i++){
-    let k = keyframes[i];
+  for(let i=0; i<keyframesArray[selectedTrackIndex].length; i++){
+    let k = keyframesArray[selectedTrackIndex][i];
     let x = timeToX(k.time);
     let y = valueToY(k.value[selectedValueIndex]);
     if(x<60||x>width-40) continue;
@@ -207,8 +207,8 @@ function drawKeyframes() {
 }
 
 function drawHandles() {
-  if(selected<0 || selected>=keyframes.length-1) return;
-  let k0 = keyframes[selected], k1 = keyframes[selected+1];
+  if(selected<0 || selected>=keyframesArray[selectedTrackIndex].length-1) return;
+  let k0 = keyframesArray[selectedTrackIndex][selected], k1 = keyframesArray[selectedTrackIndex][selected+1];
   let t0 = k0.time, t1 = k1.time;
   let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
   let dt = t1-t0;
@@ -243,8 +243,8 @@ function drawCurve() {
 function mousePressed() {
   // Bezier handle hit detection
   draggingHandle = null;
-  if(selected>=0 && selected<keyframes.length-1){
-    let k0 = keyframes[selected], k1 = keyframes[selected+1];
+  if(selected>=0 && selected<keyframesArray[selectedTrackIndex].length-1){
+    let k0 = keyframesArray[selectedTrackIndex][selected], k1 = keyframesArray[selectedTrackIndex][selected+1];
     let t0 = k0.time, t1 = k1.time;
     let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
     let dt = t1-t0;
@@ -262,22 +262,22 @@ function mousePressed() {
     let t = xToTime(mouseX);
     let v = yToValue(mouseY);
     // When adding, match the length of the existing keyframe's value array
-    let arrLen = keyframes.length>0 && Array.isArray(keyframes[0].value) ? keyframes[0].value.length : 3;
+    let arrLen = keyframesArray[selectedTrackIndex].length>0 && Array.isArray(keyframesArray[selectedTrackIndex][0].value) ? keyframesArray[selectedTrackIndex][0].value.length : 3;
     let valArr = new Array(arrLen).fill(0);
     valArr[selectedValueIndex] = constrain(v,valueMin,valueMax);
-    keyframes.push({
+    keyframesArray[selectedTrackIndex].push({
       time: constrain(t,0,timelineMax),
       value: valArr,
       interpolationOut: 'bezier', interpolationIn: 'bezier',
       outEase: {influence:33,speed:0}, inEase:{influence:33,speed:0}
     });
-    keyframes.sort((a,b)=>a.time-b.time);
+    keyframesArray[selectedTrackIndex].sort((a,b)=>a.time-b.time);
     redraw();
     return false;
   }
   // Select
-  for(let i=0; i<keyframes.length; i++){
-    let k = keyframes[i];
+  for(let i=0; i<keyframesArray[selectedTrackIndex].length; i++){
+    let k = keyframesArray[selectedTrackIndex][i];
     let x = timeToX(k.time);
     let y = valueToY(k.value[selectedValueIndex]);
     if(dist(mouseX, mouseY, x, y)<10){
@@ -294,8 +294,8 @@ function mousePressed() {
 }
 
 function mouseDragged() {
-  if(draggingHandle && selected>=0 && selected<keyframes.length-1){
-    let k0 = keyframes[selected], k1 = keyframes[selected+1];
+  if(draggingHandle && selected>=0 && selected<keyframesArray[selectedTrackIndex].length-1){
+    let k0 = keyframesArray[selectedTrackIndex][selected], k1 = keyframesArray[selectedTrackIndex][selected+1];
     let t0 = k0.time, t1 = k1.time;
     let v0 = k0.value[selectedValueIndex], v1 = k1.value[selectedValueIndex];
     let dt = t1-t0;
@@ -319,10 +319,10 @@ function mouseDragged() {
   if(dragging && selected>=0){
     let t = xToTime(mouseX-dragOffset.x);
     let v = yToValue(mouseY-dragOffset.y);
-    keyframes[selected].time = constrain(t,0,timelineMax);
-    keyframes[selected].value[selectedValueIndex] = constrain(v,valueMin,valueMax);
-    keyframes.sort((a,b)=>a.time-b.time);
-    selected = keyframes.findIndex(k=>k===keyframes[selected]);
+    keyframesArray[selectedTrackIndex][selected].time = constrain(t,0,timelineMax);
+    keyframesArray[selectedTrackIndex][selected].value[selectedValueIndex] = constrain(v,valueMin,valueMax);
+    keyframesArray[selectedTrackIndex].sort((a,b)=>a.time-b.time);
+    selected = keyframesArray[selectedTrackIndex].findIndex(k=>k===keyframesArray[selectedTrackIndex][selected]);
     redraw();
   }
 }
@@ -334,12 +334,12 @@ function mouseReleased() {
 
 function doubleClicked() {
   // Double-click to delete
-  for(let i=0; i<keyframes.length; i++){
-    let k = keyframes[i];
+  for(let i=0; i<keyframesArray[selectedTrackIndex].length; i++){
+    let k = keyframesArray[selectedTrackIndex][i];
     let x = timeToX(k.time);
   let y = valueToY(k.value[selectedValueIndex]);
     if(dist(mouseX, mouseY, x, y)<10){
-      keyframes.splice(i,1);
+      keyframesArray[selectedTrackIndex].splice(i,1);
       selected = -1;
       redraw();
       return;
@@ -350,7 +350,7 @@ function doubleClicked() {
 function keyPressed() {
   // 1=hold, 2=linear, 3=bezier, L/R=Handle toggle
   if(selected>=0){
-    let k = keyframes[selected];
+    let k = keyframesArray[selectedTrackIndex][selected];
     if(key==='1') { k.interpolationOut = 'hold'; redraw(); }
     if(key==='2') { k.interpolationOut = 'linear'; redraw(); }
     if(key==='3') { k.interpolationOut = 'bezier'; redraw(); }
@@ -368,7 +368,7 @@ function keyPressed() {
     }
     // L
     if((key==='l'||key==='L') && selected>0){
-      let kin = keyframes[selected];
+      let kin = keyframesArray[selectedTrackIndex][selected];
       if(kin.inEase.influence===0 && kin.inEase.speed===0 && inHandleBackup){
         kin.inEase.influence = inHandleBackup.influence>1?inHandleBackup.influence:33;
         kin.inEase.speed = Math.abs(inHandleBackup.speed)>0.01?inHandleBackup.speed:0;
@@ -383,12 +383,12 @@ function keyPressed() {
 }
 
 function getValueAtTime(t){
-  if(keyframes.length===0) return [0,0,0];
-  if(t<=keyframes[0].time) return keyframes[0].value;
-  if(t>=keyframes[keyframes.length-1].time) return keyframes[keyframes.length-1].value;
+  if(keyframesArray[selectedTrackIndex].length===0) return [0,0,0];
+  if(t<=keyframesArray[selectedTrackIndex][0].time) return keyframesArray[selectedTrackIndex][0].value;
+  if(t>=keyframesArray[selectedTrackIndex][keyframesArray[selectedTrackIndex].length-1].time) return keyframesArray[selectedTrackIndex][keyframesArray[selectedTrackIndex].length-1].value;
   let i=1;
-  while(i<keyframes.length && keyframes[i].time<t) i++;
-  let k0 = keyframes[i-1], k1 = keyframes[i];
+  while(i<keyframesArray[selectedTrackIndex].length && keyframesArray[selectedTrackIndex][i].time<t) i++;
+  let k0 = keyframesArray[selectedTrackIndex][i-1], k1 = keyframesArray[selectedTrackIndex][i];
   let localT = (t-k0.time)/(k1.time-k0.time);
   // HOLD
   if(k0.interpolationOut==='hold'){
@@ -470,7 +470,7 @@ function saveJson(){
     parentName: meta.parentName,
     layerName: meta.layerName,
     matchName: meta.matchName,
-    keys: keyframes.map(k=>({
+    keys: keyframesArray[selectedTrackIndex].map(k=>({
       time: k.time,
       value: k.value,
       inEase: [k.inEase],
@@ -525,7 +525,7 @@ function loadJson(event){
       }
     }
     if(data[0] && data[0].keys){
-      keyframes = data[0].keys.map(k=>({
+      keyframesArray[selectedTrackIndex] = data[0].keys.map(k=>({
         time: k.time,
         value: k.value,
         inEase: k.inEase[0],
@@ -533,9 +533,9 @@ function loadJson(event){
         interpolationIn: k.interpolationIn,
         interpolationOut: k.interpolationOut
       }));
-      keyframes.sort((a,b)=>a.time-b.time);
+      keyframesArray[selectedTrackIndex].sort((a,b)=>a.time-b.time);
       // Timeline auto-adjustment
-      let last = keyframes[keyframes.length-1];
+      let last = keyframesArray[selectedTrackIndex][keyframesArray[selectedTrackIndex].length-1];
       if(last && last.time>timelineMax) {
         timelineMax = last.time+1;
         // update timelineMax input and sliders
