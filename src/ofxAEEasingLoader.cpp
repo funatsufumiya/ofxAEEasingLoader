@@ -1,19 +1,17 @@
 #include "ofxAEEasingLoader.h"
 
-namespace o = ofxaeel;
-
-size_t ofxAEEasingLoader::getPropertyIndex(std::string property_name, o::optional<std::string> layer_name, o::optional<std::string> parent_name){
+size_t ofxAEEasingLoader::getPropertyIndex(std::string property_name, std::string layer_name, std::string parent_name){
     auto it = std::find_if(tracks.begin(), tracks.end(), [&property_name, &parent_name, &layer_name](const Track& t) {
-        if(parent_name.has_value() && layer_name.has_value()){
+        if(parent_name != "" && layer_name != ""){
             return t.propertyName == property_name
-                && t.parentName == parent_name.value()
-                && t.layerName == layer_name.value();
-        }else if(parent_name.has_value()){
+                && t.parentName == parent_name
+                && t.layerName == layer_name;
+        }else if(parent_name != ""){
             return t.propertyName == property_name
-                && t.parentName == parent_name.value();
-        }else if(layer_name.has_value()){
+                && t.parentName == parent_name;
+        }else if(layer_name != ""){
             return t.propertyName == property_name
-                && t.layerName == layer_name.value();
+                && t.layerName == layer_name;
         }else{
             return t.propertyName == property_name;
         }
@@ -29,18 +27,18 @@ size_t ofxAEEasingLoader::getPropertyIndex(std::string property_name, o::optiona
 }
 
 template <>
-vector<float> ofxAEEasingLoader::get(float t, std::string property_name, o::optional<std::string> layer_name, o::optional<std::string> parent_name){
+vector<float> ofxAEEasingLoader::get(float t, std::string property_name, std::string layer_name, std::string parent_name){
     auto it = std::find_if(tracks.begin(), tracks.end(), [&property_name, &parent_name, &layer_name](const Track& t) {
-        if(parent_name.has_value() && layer_name.has_value()){
+        if(parent_name != "" && layer_name != ""){
             return t.propertyName == property_name
-                && t.parentName == parent_name.value()
-                && t.layerName == layer_name.value();
-        }else if(parent_name.has_value()){
+                && t.parentName == parent_name
+                && t.layerName == layer_name;
+        }else if(parent_name != ""){
             return t.propertyName == property_name
-                && t.parentName == parent_name.value();
-        }else if(layer_name.has_value()){
+                && t.parentName == parent_name;
+        }else if(layer_name != ""){
             return t.propertyName == property_name
-                && t.layerName == layer_name.value();
+                && t.layerName == layer_name;
         }else{
             return t.propertyName == property_name;
         }
@@ -61,7 +59,7 @@ vector<float> ofxAEEasingLoader::get(float t, size_t index){
 }
 
 template <>
-float ofxAEEasingLoader::get(float t, std::string name, o::optional<std::string> layer_name, o::optional<std::string> parent_name){
+float ofxAEEasingLoader::get(float t, std::string name, std::string layer_name, std::string parent_name){
     return get<vector<float>>(t, name, layer_name, parent_name).at(0);
 }
 
@@ -71,7 +69,7 @@ float ofxAEEasingLoader::get(float t, size_t index){
 }
 
 template <>
-ofVec2f ofxAEEasingLoader::get(float t, std::string name, o::optional<std::string> layer_name, o::optional<std::string> parent_name){
+ofVec2f ofxAEEasingLoader::get(float t, std::string name, std::string layer_name, std::string parent_name){
     auto v = get<vector<float>>(t, name, layer_name, parent_name);
     return ofVec2f(v.at(0), v.at(1));
 }
@@ -83,7 +81,7 @@ ofVec2f ofxAEEasingLoader::get(float t, size_t index){
 }
 
 template <>
-ofVec3f ofxAEEasingLoader::get(float t, std::string name, o::optional<std::string> layer_name, o::optional<std::string> parent_name){
+ofVec3f ofxAEEasingLoader::get(float t, std::string name, std::string layer_name, std::string parent_name){
     auto v = get<vector<float>>(t, name, layer_name, parent_name);
     return ofVec3f(v.at(0), v.at(1), v.at(2));
 }
@@ -95,7 +93,7 @@ ofVec3f ofxAEEasingLoader::get(float t, size_t index){
 }
 
 template <>
-ofVec4f ofxAEEasingLoader::get(float t, std::string name, o::optional<std::string> layer_name, o::optional<std::string> parent_name){
+ofVec4f ofxAEEasingLoader::get(float t, std::string name, std::string layer_name, std::string parent_name){
     auto v = get<vector<float>>(t, name, layer_name, parent_name);
     return ofVec4f(v.at(0), v.at(1), v.at(2), v.at(3));
 }
