@@ -8,7 +8,7 @@ You can load selected keyframes (curves/easings) from After Effects.
 
 Tested on oF 0.12.0
 
-## Usage
+## Usage (AE)
 
 1. Select curves (easings) or keyframes which you want to export
 
