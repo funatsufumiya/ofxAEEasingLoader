@@ -84,10 +84,10 @@ public:
     }
 
     template <typename T = float>
-    T get(std::string name, float t);
+    T get(std::string property_name, float t);
 
     template <typename T = float>
-    T get(int index, float t);
+    T get(int property_index, float t);
 
     /// @brief alias of get(0, t)
     template <typename T = float>

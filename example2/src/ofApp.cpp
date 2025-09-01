@@ -17,6 +17,8 @@ void ofApp::draw(){
 
     // NOTE:
     // - you can also use vector: `ae_easing.get<vector<float>>(t)`
+    // - if values count are among 2~4, you can use ofVec2f, ofVec3f, ofVec4f.
+    // - if exceeds it, you should use vector.
 
     ofDrawBitmapString("t: " + ofToString(t, 2), 50, 50);
 
