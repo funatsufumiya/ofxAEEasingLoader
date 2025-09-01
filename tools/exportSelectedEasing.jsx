@@ -45,30 +45,6 @@
         return;
     }
 
-    function findLayerNameForProp(prop, comp) {
-        var selectedLayers = comp.selectedLayers;
-        for (var i = 0; i < selectedLayers.length; i++) {
-            var layer = selectedLayers[i];
-            if (searchPropInTree(layer, prop)) {
-                return layer.name;
-            }
-        }
-        return null;
-    }
-
-    function searchPropInTree(rootProp, targetProp) {
-        if (rootProp === targetProp) return true;
-        if (rootProp.numProperties && rootProp.numProperties > 0) {
-            for (var i = 1; i <= rootProp.numProperties; i++) {
-                if (searchPropInTree(rootProp.property(i), targetProp)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    var comp = app.project.activeItem;
     var result = [];
     for(var i=0; i<sel.length; i++) {
         var prop = sel[i];
@@ -84,9 +60,11 @@
                 interpolationOut: interpolationTypeToString(prop.keyOutInterpolationType(k))
             });
         }
-        var layerName = findLayerNameForProp(prop, comp);
+        var parentName = prop.propertyGroup() ? prop.propertyGroup().name: "";
+        var layerName = prop.propertyGroup(prop.propertyDepth).name;
         result.push({
             propertyName: prop.name,
+            parentName: parentName,
             layerName: layerName,
             matchName: prop.matchName,
             keys: keys
