@@ -46,9 +46,9 @@
     }
 
     function findLayerNameForProp(prop, comp) {
-        var layers = comp.layers;
-        for (var i = 1; i <= layers.length; i++) {
-            var layer = layers[i];
+        var selectedLayers = comp.selectedLayers;
+        for (var i = 0; i < selectedLayers.length; i++) {
+            var layer = selectedLayers[i];
             if (searchPropInTree(layer, prop)) {
                 return layer.name;
             }
