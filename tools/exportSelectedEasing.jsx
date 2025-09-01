@@ -58,6 +58,19 @@
                 interpolationOut: interpolationTypeToString(prop.keyOutInterpolationType(k))
             });
         }
+        // Get parent layer name
+        var layerName = null;
+        try {
+            if (prop.propertyGroup && typeof prop.propertyGroup === 'function') {
+                // propertyGroup(0) returns layer name
+                var layer = prop.propertyGroup(0);
+                if (layer && layer.name) {
+                    layerName = layer.name;
+                }
+            }
+        } catch(e) {
+            layerName = null;
+        }
         result.push({
             propertyName: prop.name,
             matchName: prop.matchName,
