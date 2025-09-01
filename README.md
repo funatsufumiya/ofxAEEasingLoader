@@ -45,7 +45,7 @@ see [example/src/ofApp.cpp](example/src/ofApp.cpp) or [example/src/ofApp.h](exam
 
 ## Example2: multiple value
 
-In this case, values exported with multiple (in this case, X and Y).
+Situation that multiple values exported (in this case, X and Y).
 
 ![screenshot_multiple](./docs/screenshot_multiple.png)
 
