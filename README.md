@@ -73,6 +73,8 @@ void ofApp::draw(){
 }
 ```
 
+see [example2/src/ofApp.cpp](example2/src/ofApp.cpp) or [example2/src/ofApp.h](example2/src/ofApp.h) for detail.
+
 ## TODOs
 
 - Add multiple track case example
