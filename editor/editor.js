@@ -239,11 +239,35 @@ function getValueAtTime(t){
   }
   // BEZIER
   if(k0.interpolationOut==='bezier' && k1.interpolationIn==='bezier'){
-    return [
-      0,
-      cubicBezier(k0.value[1], k0.value[1]+k0.outEase.speed*0.01, k1.value[1]-k1.inEase.speed*0.01, k1.value[1], localT),
-      0
-    ];
+    let t0 = k0.time, t1 = k1.time;
+    let v0 = k0.value[1], v1 = k1.value[1];
+    let outEase = k0.outEase, inEase = k1.inEase;
+    let dt = t1 - t0;
+    if(dt <= 0) return [0, v0, 0];
+    // Control point calculation
+    let p0x = 0.0, p3x = 1.0;
+    let p1x = outEase.influence / 100.0;
+    let p2x = 1.0 - inEase.influence / 100.0;
+    let p0y = v0, p3y = v1;
+    // speed = change per second
+    let p1y = v0 + outEase.speed * dt * (outEase.influence / 100.0);
+    let p2y = v1 - inEase.speed * dt * (inEase.influence / 100.0);
+    // en: Newton's method for finding t_bez corresponding to localT
+    let x = localT;
+    let guess = x;
+    for(let i=0;i<5;i++){
+      let bez_x = cubicBezier(p0x, p1x, p2x, p3x, guess);
+      let bez_dx = 3 * (1 - guess) * (1 - guess) * (p1x - p0x)
+                 + 6 * (1 - guess) * guess * (p2x - p1x)
+                 + 3 * guess * guess * (p3x - p2x);
+      if(bez_dx === 0) break;
+      guess -= (bez_x - x) / bez_dx;
+      if(guess < 0) guess = 0;
+      if(guess > 1) guess = 1;
+    }
+    let t_bez = guess;
+    let y = cubicBezier(p0y, p1y, p2y, p3y, t_bez);
+    return [0, y, 0];
   }
   // fallback: linear
   return [0, lerp(k0.value[1], k1.value[1], localT), 0];
