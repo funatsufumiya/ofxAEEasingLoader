@@ -90,6 +90,9 @@ function setup() {
   window.updateTrackSelect();
   trackSelect.addEventListener('change', (e) => {
     selectedTrackIndex = parseInt(e.target.value);
+    // Recalculate the length of Value Index and update the selector
+    selectedValueIndex = 0;
+    updateValueIndexSelector();
     // Update meta information UI
     updateMetaInputs();
     redraw();
