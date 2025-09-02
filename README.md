@@ -143,7 +143,7 @@ see [example3/src/ofApp.cpp](example3/src/ofApp.cpp) or [example3/src/ofApp.h](e
 
 ## Appendix: json editor
 
-Simple p5.js json file editor is in [`./editor`](./editor/).
+[Simple p5.js json file editor](https://funatsufumiya.github.io/ofxAEEasingLoader/editor/): source: [`./docs/editor`](./docs/editor/).
 
 :warning: Almost created by GitHub Copilot. Please use with care.
 
