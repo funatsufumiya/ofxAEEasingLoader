@@ -240,7 +240,7 @@ function createValueIndexSelector() {
   for (let i = 0; i < len; ++i) {
     const opt = document.createElement('option');
     opt.value = i;
-    opt.textContent = `Index ${i}`;
+    opt.textContent = `Value Index ${i}`;
     sel.appendChild(opt);
   }
   sel.value = selectedValueIndex;
