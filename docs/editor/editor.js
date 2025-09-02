@@ -55,7 +55,14 @@ function setup() {
   let trackDiv = document.createElement('div');
   trackDiv.id = 'track-controls';
   trackDiv.style.marginBottom = '8px';
-  if (ui) ui.insertBefore(trackDiv, ui.firstChild);
+  // metadata input
+  let metaDiv = document.createElement('div');
+  metaDiv.id = 'meta-info';
+  metaDiv.style.marginBottom = '8px';
+  if (ui) {
+    ui.insertBefore(trackDiv, ui.firstChild);
+    ui.insertBefore(metaDiv, trackDiv.nextSibling);
+  }
 
   let trackSelect = document.createElement('select');
   trackSelect.id = 'track-select';
@@ -125,12 +132,6 @@ function setup() {
   };
 
   createValueIndexSelector();
-
-  // metadata input
-  let metaDiv = document.createElement('div');
-  metaDiv.id = 'meta-info';
-  metaDiv.style.marginBottom = '8px';
-  if (ui) ui.insertBefore(metaDiv, ui.firstChild);
   
   const metaProps = ['propertyName','parentName','layerName','matchName'];
   metaProps.forEach(prop => {
@@ -297,12 +298,12 @@ function createValueIndexSelector() {
     redraw();
   };
 
-  // Add to the top of the UI
   const ui = document.getElementById('ui');
-  if (ui) {
-    ui.insertBefore(delBtn, ui.firstChild);
-    ui.insertBefore(addBtn, ui.firstChild);
-    ui.insertBefore(sel, ui.firstChild);
+  const metaDiv = document.getElementById('meta-info');
+  if (ui && metaDiv) {
+    ui.insertBefore(sel, metaDiv.nextSibling);
+    ui.insertBefore(addBtn, sel.nextSibling);
+    ui.insertBefore(delBtn, addBtn.nextSibling);
   }
 }
 
@@ -673,9 +674,17 @@ function loadJson(event){
       });
       // Track selection index adjustment
       selectedTrackIndex = 0;
+      selectedValueIndex = 0;
       // Track select UI update
       let trackSelect = document.getElementById('track-select');
-      if(trackSelect && typeof updateTrackSelect === 'function') updateTrackSelect();
+      if(trackSelect && typeof updateTrackSelect === 'function') {
+        updateTrackSelect();
+        trackSelect.value = 0;
+      }
+      // Value Index UI update
+      updateValueIndexSelector();
+      let valueIndexSel = document.getElementById('value-index-selector');
+      if(valueIndexSel) valueIndexSel.value = 0;
       // Meta information UI update
       if(typeof updateMetaInputs === 'function') updateMetaInputs();
       // Timeline auto-adjustment (only for the selected track)
@@ -689,7 +698,6 @@ function loadJson(event){
         let scrollSlider = select('#timeline-scroll');
         if(scrollSlider) scrollSlider.elt.max = timelineMax-timelineLen;
       }
-      updateValueIndexSelector();
       redraw();
     }
   };
