@@ -90,7 +90,7 @@ function setup() {
   trackDiv.appendChild(trackSelect);
 
   let addBtn = document.createElement('button');
-  addBtn.textContent = '＋';
+  addBtn.textContent = 'Add';
   addBtn.title = 'Add Track';
   addBtn.onclick = () => {
     keyframesArray.push([]);
@@ -103,7 +103,7 @@ function setup() {
   trackDiv.appendChild(addBtn);
 
   let delBtn = document.createElement('button');
-  delBtn.textContent = '－';
+  delBtn.textContent = 'Del';
   delBtn.title = 'Delete Track';
   delBtn.onclick = () => {
     if (keyframesArray.length <= 1) return;
@@ -225,9 +225,14 @@ function setup() {
 }
 
 function createValueIndexSelector() {
-  // Remove existing selector if any
+  // Remove existing selector and button
   const old = document.getElementById('value-index-selector');
   if (old) old.remove();
+  const oldAdd = document.getElementById('value-index-add');
+  if (oldAdd) oldAdd.remove();
+  const oldDel = document.getElementById('value-index-del');
+  if (oldDel) oldDel.remove();
+
   // Get the length of the value array
   let len = 1;
   if (keyframesArray[selectedTrackIndex].length > 0) {
@@ -248,9 +253,57 @@ function createValueIndexSelector() {
     selectedValueIndex = parseInt(e.target.value);
     redraw();
   };
+
+  const addBtn = document.createElement('button');
+  addBtn.id = 'value-index-add';
+  addBtn.textContent = 'Add';
+  addBtn.title = 'Add Value Index';
+  addBtn.style.marginRight = '2px';
+  addBtn.onclick = () => {
+    keyframesArray.forEach((track, tIdx) => {
+      track.forEach((kf, kIdx) => {
+        let v = getValueArray(kf.value);
+        if (!Array.isArray(kf.value)) {
+          kf.value = [kf.value];
+          v = kf.value;
+        }
+        v.push(0);
+      });
+    });
+    selectedValueIndex = len;
+    updateValueIndexSelector();
+    redraw();
+  };
+
+  const delBtn = document.createElement('button');
+  delBtn.id = 'value-index-del';
+  delBtn.textContent = 'Del';
+  delBtn.title = 'Delete Value Index';
+  delBtn.onclick = () => {
+    if (len <= 1) return;
+    keyframesArray.forEach((track, tIdx) => {
+      track.forEach((kf, kIdx) => {
+        let v = getValueArray(kf.value);
+        if (Array.isArray(kf.value)) {
+          v.splice(selectedValueIndex, 1);
+          if (v.length === 1) {
+            kf.value = v[0];
+          }
+        }
+      });
+    });
+    selectedValueIndex = 0;
+    updateValueIndexSelector();
+    redraw();
+  };
+
   // Add to the top of the UI
   const ui = document.getElementById('ui');
-  if (ui) ui.insertBefore(sel, ui.firstChild);
+  if (ui) {
+    ui.insertBefore(delBtn, ui.firstChild);
+    ui.insertBefore(addBtn, ui.firstChild);
+    ui.insertBefore(sel, ui.firstChild);
+  }
 }
 
 function updateValueIndexSelector() {
