@@ -55,7 +55,14 @@ function setup() {
   let trackDiv = document.createElement('div');
   trackDiv.id = 'track-controls';
   trackDiv.style.marginBottom = '8px';
-  if (ui) ui.insertBefore(trackDiv, ui.firstChild);
+  // metadata input
+  let metaDiv = document.createElement('div');
+  metaDiv.id = 'meta-info';
+  metaDiv.style.marginBottom = '8px';
+  if (ui) {
+    ui.insertBefore(trackDiv, ui.firstChild);
+    ui.insertBefore(metaDiv, trackDiv.nextSibling);
+  }
 
   let trackSelect = document.createElement('select');
   trackSelect.id = 'track-select';
@@ -83,6 +90,9 @@ function setup() {
   window.updateTrackSelect();
   trackSelect.addEventListener('change', (e) => {
     selectedTrackIndex = parseInt(e.target.value);
+    // Recalculate the length of Value Index and update the selector
+    selectedValueIndex = 0;
+    updateValueIndexSelector();
     // Update meta information UI
     updateMetaInputs();
     redraw();
@@ -90,7 +100,7 @@ function setup() {
   trackDiv.appendChild(trackSelect);
 
   let addBtn = document.createElement('button');
-  addBtn.textContent = '＋';
+  addBtn.textContent = 'Add';
   addBtn.title = 'Add Track';
   addBtn.onclick = () => {
     keyframesArray.push([]);
@@ -103,7 +113,7 @@ function setup() {
   trackDiv.appendChild(addBtn);
 
   let delBtn = document.createElement('button');
-  delBtn.textContent = '－';
+  delBtn.textContent = 'Del';
   delBtn.title = 'Delete Track';
   delBtn.onclick = () => {
     if (keyframesArray.length <= 1) return;
@@ -125,12 +135,6 @@ function setup() {
   };
 
   createValueIndexSelector();
-
-  // metadata input
-  let metaDiv = document.createElement('div');
-  metaDiv.id = 'meta-info';
-  metaDiv.style.marginBottom = '8px';
-  if (ui) ui.insertBefore(metaDiv, ui.firstChild);
   
   const metaProps = ['propertyName','parentName','layerName','matchName'];
   metaProps.forEach(prop => {
@@ -225,9 +229,14 @@ function setup() {
 }
 
 function createValueIndexSelector() {
-  // Remove existing selector if any
+  // Remove existing selector and button
   const old = document.getElementById('value-index-selector');
   if (old) old.remove();
+  const oldAdd = document.getElementById('value-index-add');
+  if (oldAdd) oldAdd.remove();
+  const oldDel = document.getElementById('value-index-del');
+  if (oldDel) oldDel.remove();
+
   // Get the length of the value array
   let len = 1;
   if (keyframesArray[selectedTrackIndex].length > 0) {
@@ -248,9 +257,57 @@ function createValueIndexSelector() {
     selectedValueIndex = parseInt(e.target.value);
     redraw();
   };
-  // Add to the top of the UI
+
+  const addBtn = document.createElement('button');
+  addBtn.id = 'value-index-add';
+  addBtn.textContent = 'Add';
+  addBtn.title = 'Add Value Index';
+  addBtn.style.marginRight = '2px';
+  addBtn.onclick = () => {
+    keyframesArray.forEach((track, tIdx) => {
+      track.forEach((kf, kIdx) => {
+        let v = getValueArray(kf.value);
+        if (!Array.isArray(kf.value)) {
+          kf.value = [kf.value];
+          v = kf.value;
+        }
+        v.push(0);
+      });
+    });
+    selectedValueIndex = len;
+    updateValueIndexSelector();
+    redraw();
+  };
+
+  const delBtn = document.createElement('button');
+  delBtn.id = 'value-index-del';
+  delBtn.textContent = 'Del';
+  delBtn.title = 'Delete Value Index';
+  delBtn.onclick = () => {
+    if (len <= 1) return;
+    keyframesArray.forEach((track, tIdx) => {
+      track.forEach((kf, kIdx) => {
+        let v = getValueArray(kf.value);
+        if (Array.isArray(kf.value)) {
+          v.splice(selectedValueIndex, 1);
+          if (v.length === 1) {
+            kf.value = v[0];
+          }
+        }
+      });
+    });
+    selectedValueIndex = 0;
+    updateValueIndexSelector();
+    redraw();
+  };
+
   const ui = document.getElementById('ui');
-  if (ui) ui.insertBefore(sel, ui.firstChild);
+  const metaDiv = document.getElementById('meta-info');
+  if (ui && metaDiv) {
+    ui.insertBefore(sel, metaDiv.nextSibling);
+    ui.insertBefore(addBtn, sel.nextSibling);
+    ui.insertBefore(delBtn, addBtn.nextSibling);
+  }
 }
 
 function updateValueIndexSelector() {
@@ -620,9 +677,17 @@ function loadJson(event){
       });
       // Track selection index adjustment
       selectedTrackIndex = 0;
+      selectedValueIndex = 0;
       // Track select UI update
       let trackSelect = document.getElementById('track-select');
-      if(trackSelect && typeof updateTrackSelect === 'function') updateTrackSelect();
+      if(trackSelect && typeof updateTrackSelect === 'function') {
+        updateTrackSelect();
+        trackSelect.value = 0;
+      }
+      // Value Index UI update
+      updateValueIndexSelector();
+      let valueIndexSel = document.getElementById('value-index-selector');
+      if(valueIndexSel) valueIndexSel.value = 0;
       // Meta information UI update
       if(typeof updateMetaInputs === 'function') updateMetaInputs();
       // Timeline auto-adjustment (only for the selected track)
@@ -636,7 +701,6 @@ function loadJson(event){
         let scrollSlider = select('#timeline-scroll');
         if(scrollSlider) scrollSlider.elt.max = timelineMax-timelineLen;
       }
-      updateValueIndexSelector();
       redraw();
     }
   };
