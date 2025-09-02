@@ -145,6 +145,8 @@ see [example3/src/ofApp.cpp](example3/src/ofApp.cpp) or [example3/src/ofApp.h](e
 
 Simple p5.js json file editor is in [`./editor`](./editor/).
 
+![screenshot_editor](./docs/screenshot_editor.png)
+
 ## License
 
 [0BSD](./LICENSE_0BSD) or [WTFPL](./LICENSE_WTFPL)
